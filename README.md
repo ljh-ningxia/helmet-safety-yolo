@@ -8,11 +8,12 @@
 ![Dataset](https://img.shields.io/badge/dataset-CC%20BY%204.0-green)
 ![Code](https://img.shields.io/badge/code-MIT-blue)
 
-> **在线看运行界面（不用装环境）**：仓库内置静态展示页 `docs/index.html`，实测指标、看板截图、
-> 真实推理证据与 A/B 表全部由 `experiments/results/*.json` 自动生成。
-> 在 **Settings → Pages** 选择 `main` + `/docs` 开启后，直接访问
-> <https://ljh-ningxia.github.io/helmet-safety-yolo/> 即可查看。
-> GitHub 本身只托管代码、不会在网页里运行 Python；要上传图片在线检测请按第六节在本地启动服务。
+> **在线可交互演示（推荐直接发这个链接）**：
+> <https://helmet-safety-demo.app.workbuddy.host/?sharecode=A5GW3OWOW3>
+> 打开就能上传工地图片，服务端用真实训练权重做推理，返回检测框、违规计数与分级预警，
+> 无需安装任何环境。**链接要完整复制，包含 `?sharecode=...`**，否则会被拒绝访问。
+> 仓库另附静态展示页 `docs/index.html`（在 Settings → Pages 选 `main` + `/docs` 可查看实测证据）。
+> GitHub 本身只托管代码、不会在网页里运行 Python；本地运行方式见第六节。
 
 ---
 
