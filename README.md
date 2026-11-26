@@ -31,13 +31,13 @@
 | 指标 | 实测值 |
 |---|---|
 | 训练数据 | 3200 张真实图（train/valid/test 分层子集） |
-| 训练 epoch | — · CPU `— s` |
-| mAP@0.5 | **—** |
-| mAP@0.5:0.95 | **—** |
-| Precision / Recall | — / — |
-| 独立测试图片 | — |
-| CPU 推理 P95 | — ms |
-| CPU 吞吐 | — FPS |
+| 训练 epoch | 12 · CPU `2499.94 s` |
+| mAP@0.5 | **0.7893** |
+| mAP@0.5:0.95 | **0.4486** |
+| Precision / Recall | 0.8387 / 0.7927 |
+| 独立测试图片 | 600 |
+| CPU 推理 P95 | 30.84 ms |
+| CPU 吞吐 | 33.8 FPS |
 
 来源：`experiments/results/{train_run,evaluation,benchmark,dataset_audit}.json`。
 运行 `python scripts/07_generate_docs.py` 可重新生成。
@@ -65,7 +65,7 @@ python scripts/03_train.py
 python scripts/04_evaluate.py
 
 # 5. 单变量公平 A/B
-python scripts/05_run_ab.py --limit 60
+python scripts/05_run_ab.py --limit 100
 
 # 6. 由实测 JSON 重新生成 README / 数据卡 / 模型卡 / 评估报告
 python scripts/07_generate_docs.py
@@ -100,7 +100,7 @@ python -m helmet_safety.cli serve --port 8000
 
 ---
 
-## 四、系统设计与三项可独立开关的改进
+## 四、系统设计与三项可独立开关的机制
 
 | 模块 | 解决什么 | 代价 | 如何验证 |
 |---|---|---|---|
@@ -109,6 +109,8 @@ python -m helmet_safety.cli serve --port 8000
 | **分级告警闭环** `alert/policy.py` | 只画框无业务动作 | 冷却期内可能压掉真实事件 | E4：只开 `enable_alert_dedup` |
 
 另有 `E2` 做置信度阈值校准。四组实验**每次只改一个变量**，A/B 共享同一权重、同一批图片、同一顺序与 seed，并**同时报告收益和代价**（召回、误检、延迟、事件数）。
+
+**实测包含负结果，不隐藏**：上游已把图片统一缩放到 640×640，`E1` 切片在本数据分布上召回反而从 0.8231 降到 0.8027、时延从约 32 ms 升到约 291 ms，因此 `enable_tiling` 默认关闭；`E3` 改为受控扰动实验（每张真实图片构造 5 帧、按固定 seed 注入 30% 瞬时漏检），投票把召回从 0.5952 恢复到 0.7143，代价是 3 帧确认延迟。完整冻结条件与 `conclusion_boundary` 见 `experiments/results/ab_*.json`。
 
 ![真实推理证据](assets/real_inference.png)
 
@@ -142,7 +144,7 @@ README / docs/MODEL_CARD.md / docs/EVALUATION.md
 - 结构化日志：`HELMET_LOG_JSON=1` 输出可索引 JSON 行
 - 强类型 schema（`BBox` / `Detection` / `FrameResult` / `AlertEvent`）
 - FastAPI 服务 + Web 看板；**权重缺失时 `/detect` 明确返回 503，绝不用假结果兜底**
-- 30+ 单测（CI 不需要权重文件）、GitHub Actions、Dockerfile、Makefile、pyproject
+- 26 项单元/集成测试（CI 不需要权重文件）、GitHub Actions、Dockerfile、Makefile、pyproject
 - ADR 记录关键取舍，模型卡 / 数据卡 / 复现指南齐备
 
 ```bash
@@ -158,8 +160,8 @@ python -m helmet_safety.cli doctor
 完整版见 [`docs/BOUNDARIES.md`](docs/BOUNDARIES.md)。最要紧的三条：
 
 1. 指标只在**这一个公开数据集**上测过，不代表客户自有摄像头的表现；上游做过拉伸缩放，存在域偏移。
-2. 数据集是**离散图片而非连续监控视频**，时序模块无法据此证明真实视频稳定性，A/B 报告里明确标注了这一点。
-3. 时延是 **CPU 单图同步推理**，没有 TensorRT / ONNX 优化，不能当边缘部署结论；类别不平衡使少数类召回天然偏低，上线前必须用现场数据重新校准阈值。
+2. 数据集是**离散图片而非连续监控视频**；`E3` 因此改为受控扰动实验，只能证明投票机制对瞬时漏检的恢复作用，不能证明真实视频流稳定性。
+3. 时延是 **CPU 单图同步推理**，没有 TensorRT / ONNX 优化，不能当边缘部署结论；类别不平衡 3.43× 会让总体指标偏向多数类，因此所有报告都按类分列（本次 `no-hardhat` 召回 0.8295，`hardhat` 为 0.7560）。
 
 ---
 

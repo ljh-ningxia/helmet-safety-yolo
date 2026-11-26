@@ -1,5 +1,5 @@
 {
-  "root": "C:/Users/Administrator/WorkBuddy/2026-11-26-08-25-19/helmet-safety-yolo/data/processed",
+  "root": "data/processed",
   "classes": [
     "hardhat",
     "no-hardhat"
@@ -86,5 +86,5 @@
     "Scale buckets use COCO thresholds on 640x640 pixel area.",
     "Brightness is a crude luminance proxy, not a labelled day/night tag."
   ],
-  "contact_sheet": "C:/Users/Administrator/WorkBuddy/2026-11-26-08-25-19/helmet-safety-yolo/experiments/results/dataset_samples.png"
+  "contact_sheet": "experiments/results/dataset_samples.png"
 }

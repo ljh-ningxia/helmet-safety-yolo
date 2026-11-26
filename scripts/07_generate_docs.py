@@ -33,6 +33,53 @@ def load(name: str, default: Any = None) -> Any:
     return json.loads(p.read_text(encoding="utf-8"))
 
 
+def rel_path(v: Any) -> Any:
+    """Turn a machine-specific absolute path into a project-relative one."""
+    if not isinstance(v, str):
+        return v
+    s = v.replace("\\", "/")
+    root = str(ROOT).replace("\\", "/").rstrip("/")
+    pos = s.lower().find(root.lower())
+    if pos >= 0:
+        return s[pos + len(root):].lstrip("/") or "."
+    return s
+
+
+def _walk(x: Any) -> Any:
+    if isinstance(x, dict):
+        return {k: _walk(v) for k, v in x.items()}
+    if isinstance(x, list):
+        return [_walk(v) for v in x]
+    return rel_path(x)
+
+
+def normalize_artifacts() -> None:
+    """Strip local absolute paths from result JSON before they reach a public repo.
+
+    Reproducibility depends on *relative* paths: an absolute Windows path in a
+    model card is neither portable nor appropriate for a public repository.
+    """
+    names = ["train_run.json", "train_smoke.json", "evaluation.json",
+             "dataset_audit.json", "dataset_preparation.json", "ab_summary.json"]
+    names += sorted(p.name for p in R.glob("ab_E*.json"))
+    changed = []
+    for name in names:
+        p = R / name
+        if not p.is_file():
+            continue
+        raw = p.read_text(encoding="utf-8")
+        try:
+            data = json.loads(raw)
+        except json.JSONDecodeError:
+            continue
+        out = json.dumps(_walk(data), ensure_ascii=False, indent=2)
+        if out != raw:
+            p.write_text(out, encoding="utf-8")
+            changed.append(name)
+    if changed:
+        log.info("normalized local paths", files=",".join(changed))
+
+
 def md_table(headers, rows) -> str:
     out = ["| " + " | ".join(str(h) for h in headers) + " |",
            "|" + "|".join("---" for _ in headers) + "|"]
@@ -90,7 +137,7 @@ def dataset_doc() -> str:
 
 ## 2. 实际使用规模
 
-本项目在 CPU 环境使用固定 seed `{a.get('root','') and p.get('seed','—')}` 做了
+本项目在 CPU 环境使用固定 seed `{p.get('seed','—')}` 做了
 **类别-密度分层抽样**（`src/helmet_safety/data/split.py`），保证稀有的
 `no-hardhat` 样本按原比例保留。上游全量为 19,745 张图
 （train 13,782 / valid 3,962 / test 2,001），实际参与本次训练/评估的是：
@@ -215,6 +262,7 @@ if rows else '_按类指标未生成_'}
 def evaluation_doc() -> str:
     e = load("evaluation.json")
     ab = load("ab_summary.json")
+    t = load("train_run.json")
     o = e.get("official_validation", {})
     lat = e.get("latency_benchmark", {})
     slices = e.get("slice_metrics", {})
@@ -250,6 +298,22 @@ def evaluation_doc() -> str:
     ['验证耗时', f"{o.get('val_seconds','—')} s"],
     ['测试图片数', e.get('n_test_images','—')],
 ])}
+
+### 选参集与独立测试集的落差（不隐藏）
+
+`best.pt` 是按 **valid** split 的 fitness 选出的，因此 valid 指标带有选参乐观偏差；
+下面把两者并列，而不是只报告更好看的那个数字。
+
+{md_table(['mAP@0.5', '数值', '说明'], [
+    ['valid（选 best.pt 用）', f(t.get('metrics', {}).get('metrics/mAP50(B)')), '训练过程中逐 epoch 验证'],
+    ['test（本报告）', f(o.get('map50')), '与训练、选参完全隔离的独立测试集'],
+    ['差值', f(round(float(t.get('metrics', {}).get('metrics/mAP50(B)', 0) or 0)
+                   - float(o.get('map50') or 0), 4)
+               if t.get('metrics', {}).get('metrics/mAP50(B)') is not None
+               and o.get('map50') is not None else None), 'valid − test，正值即泛化落差'],
+])}
+
+> 对外只引用 **test** 数字。valid 数字仅用于解释落差，不作为项目成绩。
 
 ## 2. 延迟基准
 
@@ -333,6 +397,7 @@ def patch_readme() -> None:
 
 def main() -> int:
     D.mkdir(parents=True, exist_ok=True)
+    normalize_artifacts()
     (D / "DATASET.md").write_text(dataset_doc(), encoding="utf-8")
     (D / "MODEL_CARD.md").write_text(model_card_doc(), encoding="utf-8")
     (D / "EVALUATION.md").write_text(evaluation_doc(), encoding="utf-8")

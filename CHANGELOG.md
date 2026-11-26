@@ -26,15 +26,31 @@ v2 is trained and evaluated on a real, licensed public dataset.
   same real images, reporting both gain and cost.
 - **Engineering**: typed dataclass configuration with env overlays, structured
   JSON logging, FastAPI service with graceful 503 when weights are absent,
-  web dashboard, unified CLI, 30+ unit tests, GitHub Actions CI, Dockerfile,
-  pyproject/requirements, Makefile, ADRs, model card, dataset card, reproduction
-  guide and explicit conclusion boundaries.
+  web dashboard, unified CLI, 26 unit/integration tests, GitHub Actions CI,
+  Dockerfile, pyproject/requirements, Makefile, ADRs, model card, dataset card,
+  reproduction guide and explicit conclusion boundaries.
 
 ### Removed
 
 - The synthetic `demo` detector and all `SELFTEST_ONLY` numbers. v2 has no fake
   fallback: inference fails loudly if the trained weights are missing.
 - v1's Flask dashboard (replaced by FastAPI).
+
+### Measured in this release (2026-11-26, CPU only)
+
+Single source of truth: `experiments/results/*.json`, rendered into docs by
+`scripts/07_generate_docs.py`. Latency is a wall-clock benchmark and fluctuates
+between runs; accuracy figures are deterministic for a fixed weight file.
+
+| Item | Measured |
+|---|---|
+| Training | 12 epochs / 2,499.94 s / 2,000-600-600 stratified images |
+| Held-out test (600 images) | P 0.8387 · R 0.7927 · mAP@0.5 0.7893 · mAP@0.5:0.95 0.4486 |
+| `no-hardhat` (alert class) | mAP@0.5 0.8155 · recall 0.8295 |
+| Selection gap | valid 0.8382 → test 0.7893 (−0.0489), reported rather than hidden |
+| CPU latency | ≈30 ms mean / ≈31 ms P95 / ≈34 FPS, single-image synchronous |
+| A/B outcomes | E1 tiling negative (recall 0.8231→0.8027, ≈9× latency) → disabled by default; E3 controlled-perturbation recall 0.5952→0.7143 |
+| Quality gates | 26 tests passed, `ruff check` clean, all 15 PPT pages lint-clean |
 
 ### Notes
 

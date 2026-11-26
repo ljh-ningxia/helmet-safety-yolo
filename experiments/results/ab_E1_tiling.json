@@ -1,0 +1,80 @@
+{
+  "experiment": "E1_tiling",
+  "name": "切片推理（小目标）",
+  "variable": "enable_tiling",
+  "evidence_level": "MEASURED",
+  "frozen_conditions": {
+    "weights": "experiments/runs/yolov8n-hardhat/weights/best.pt",
+    "n_images": 100,
+    "image_list_first5": [
+      "-104-_png_jpg.rf.cafd0e489c2526a33249f108d24b9039.jpg",
+      "-1052-_png_jpg.rf.faa916675308c044906ee1567d56e030.jpg",
+      "-108-_png_jpg.rf.af059e51d5e2d07f6d800c52df066542.jpg",
+      "-1081-_png_jpg.rf.5ac9302b3df0b340acc0e4af72e1017e.jpg",
+      "-1084-_png_jpg.rf.9e97c247272a8079f91d283f28710c69.jpg"
+    ],
+    "imgsz": 320,
+    "iou": 0.5,
+    "device": "cpu",
+    "seed": 20261126,
+    "matcher": "class-aware greedy IoU@0.5 (NOT COCO mAP)",
+    "tile": "320 / overlap 0.25"
+  },
+  "A": {
+    "arm": "A",
+    "options": {
+      "tiling": false,
+      "conf": 0.25,
+      "temporal": false,
+      "dedup": true
+    },
+    "n_images": 100,
+    "precision": 0.7683,
+    "recall": 0.8231,
+    "f1": 0.7947,
+    "tp": 242,
+    "fp": 73,
+    "fn": 52,
+    "detections_total": 315,
+    "violations_total": 9,
+    "alert_events": 2,
+    "mean_latency_ms": 32.12,
+    "p50_latency_ms": 31.48,
+    "p95_latency_ms": 36.86,
+    "fps_from_mean": 31.13
+  },
+  "B": {
+    "arm": "B",
+    "options": {
+      "tiling": true,
+      "conf": 0.25,
+      "temporal": false,
+      "dedup": true
+    },
+    "n_images": 100,
+    "precision": 0.4111,
+    "recall": 0.8027,
+    "f1": 0.5438,
+    "tp": 236,
+    "fp": 338,
+    "fn": 58,
+    "detections_total": 574,
+    "violations_total": 27,
+    "alert_events": 6,
+    "mean_latency_ms": 291.31,
+    "p50_latency_ms": 272.67,
+    "p95_latency_ms": 351.61,
+    "fps_from_mean": 3.43
+  },
+  "delta": {
+    "precision": -0.3572,
+    "recall": -0.0204,
+    "f1": -0.2509,
+    "mean_latency_ms": 259.19,
+    "fps_from_mean": -27.7,
+    "detections_total": 259,
+    "alert_events": 4
+  },
+  "conclusion_boundary": "上游已把图片统一缩放到 640×640，本数据分布上切片未带来召回增益，反而增加约 9 倍时延与额外误检；因此 configs/inference/default.yaml 默认 enable_tiling=false，不把未证实的改进设为默认。",
+  "measured_at": "2026-11-26T04:33:31Z"
+}

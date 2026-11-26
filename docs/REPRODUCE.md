@@ -92,16 +92,30 @@ python scripts/04_evaluate.py
 | `experiments/results/benchmark.json` | 每一次推理的原始毫秒数 |
 | `assets/real_inference.png` | 真实图片上 GT（绿）vs 预测（红） |
 
-评估只用 `test` split，与训练/验证完全隔离。
+评估只用 `test` split，与训练/验证完全隔离。`docs/EVALUATION.md` 会把
+`best.pt` 选参所用的 valid 指标与 test 指标并列，显式给出泛化落差；
+对外只引用 test 数字。
 
 ## 5. 公平 A/B
 
 ```bash
-python scripts/05_run_ab.py --limit 60
+python scripts/05_run_ab.py --limit 100
 ```
 
 预期产物：`experiments/results/ab_E*.json`（4 组）、`ab_summary.json`、
-`ab_comparison.png`。每组 A/B 只有 `variable` 指明的那一个开关不同。
+`ab_comparison.png`。每组 A/B 只有 `variable` 指明的那一个开关不同，
+冻结条件（权重 / 图片列表 / 顺序 / seed / imgsz / IoU / device）写在每份 JSON 里。
+
+**E3 时序投票是受控扰动实验**，与其余三组不同，理由写在这里避免复现时误读：
+真实连续视频不在本数据集中，若把 100 张互不相关的静态图片直接送进
+IoU 轨迹投票器，轨迹永远无法关联，recall 会无意义地变成 0。因此 E3
+对每张真实图片只推理一次，再按固定 seed 构造 5 帧片段（每帧丢弃 30%
+**真实检出框**，模拟瞬时漏检）；A 取该片段最后一帧，B 做多数投票。
+两臂看到完全相同的帧序列，唯一差异是投票开关。注入比例、帧数、seed
+都记录在 `frozen_conditions.temporal_probe` 中，检出框本身不是合成的。
+
+> 实测结论包含负结果：E1 切片在本数据分布上召回下降且时延约 9 倍，
+> 因此 `configs/inference/default.yaml` 默认关闭切片。报告不隐藏这类结果。
 
 ## 6. 生成文档
 
@@ -110,7 +124,9 @@ python scripts/07_generate_docs.py
 ```
 
 会重写 `docs/DATASET.md` / `docs/MODEL_CARD.md` / `docs/EVALUATION.md`
-以及 README 的 `AUTO:RESULTS` 区块。**任何数字都不要手工编辑这些文件。**
+以及 README 的 `AUTO:RESULTS` 区块；同时把结果 JSON 里的本机绝对路径
+规范化为项目相对路径，保证公开仓库里不出现机器专属路径。
+**任何数字都不要手工编辑这些文件。**
 
 ## 7. 运行服务
 

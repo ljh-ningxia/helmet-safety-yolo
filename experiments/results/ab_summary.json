@@ -1,0 +1,360 @@
+{
+  "evidence_level": "MEASURED",
+  "frozen_conditions": {
+    "weights": "experiments/runs/yolov8n-hardhat/weights/best.pt",
+    "n_images": 100,
+    "image_list_first5": [
+      "-104-_png_jpg.rf.cafd0e489c2526a33249f108d24b9039.jpg",
+      "-1052-_png_jpg.rf.faa916675308c044906ee1567d56e030.jpg",
+      "-108-_png_jpg.rf.af059e51d5e2d07f6d800c52df066542.jpg",
+      "-1081-_png_jpg.rf.5ac9302b3df0b340acc0e4af72e1017e.jpg",
+      "-1084-_png_jpg.rf.9e97c247272a8079f91d283f28710c69.jpg"
+    ],
+    "imgsz": 320,
+    "iou": 0.5,
+    "device": "cpu",
+    "seed": 20261126,
+    "matcher": "class-aware greedy IoU@0.5 (NOT COCO mAP)",
+    "tile": "320 / overlap 0.25"
+  },
+  "experiments": [
+    {
+      "experiment": "E1_tiling",
+      "name": "切片推理（小目标）",
+      "variable": "enable_tiling",
+      "evidence_level": "MEASURED",
+      "frozen_conditions": {
+        "weights": "experiments/runs/yolov8n-hardhat/weights/best.pt",
+        "n_images": 100,
+        "image_list_first5": [
+          "-104-_png_jpg.rf.cafd0e489c2526a33249f108d24b9039.jpg",
+          "-1052-_png_jpg.rf.faa916675308c044906ee1567d56e030.jpg",
+          "-108-_png_jpg.rf.af059e51d5e2d07f6d800c52df066542.jpg",
+          "-1081-_png_jpg.rf.5ac9302b3df0b340acc0e4af72e1017e.jpg",
+          "-1084-_png_jpg.rf.9e97c247272a8079f91d283f28710c69.jpg"
+        ],
+        "imgsz": 320,
+        "iou": 0.5,
+        "device": "cpu",
+        "seed": 20261126,
+        "matcher": "class-aware greedy IoU@0.5 (NOT COCO mAP)",
+        "tile": "320 / overlap 0.25"
+      },
+      "A": {
+        "arm": "A",
+        "options": {
+          "tiling": false,
+          "conf": 0.25,
+          "temporal": false,
+          "dedup": true
+        },
+        "n_images": 100,
+        "precision": 0.7683,
+        "recall": 0.8231,
+        "f1": 0.7947,
+        "tp": 242,
+        "fp": 73,
+        "fn": 52,
+        "detections_total": 315,
+        "violations_total": 9,
+        "alert_events": 2,
+        "mean_latency_ms": 32.12,
+        "p50_latency_ms": 31.48,
+        "p95_latency_ms": 36.86,
+        "fps_from_mean": 31.13
+      },
+      "B": {
+        "arm": "B",
+        "options": {
+          "tiling": true,
+          "conf": 0.25,
+          "temporal": false,
+          "dedup": true
+        },
+        "n_images": 100,
+        "precision": 0.4111,
+        "recall": 0.8027,
+        "f1": 0.5438,
+        "tp": 236,
+        "fp": 338,
+        "fn": 58,
+        "detections_total": 574,
+        "violations_total": 27,
+        "alert_events": 6,
+        "mean_latency_ms": 291.31,
+        "p50_latency_ms": 272.67,
+        "p95_latency_ms": 351.61,
+        "fps_from_mean": 3.43
+      },
+      "delta": {
+        "precision": -0.3572,
+        "recall": -0.0204,
+        "f1": -0.2509,
+        "mean_latency_ms": 259.19,
+        "fps_from_mean": -27.7,
+        "detections_total": 259,
+        "alert_events": 4
+      },
+      "conclusion_boundary": "上游已把图片统一缩放到 640×640，本数据分布上切片未带来召回增益，反而增加约 9 倍时延与额外误检；因此 configs/inference/default.yaml 默认 enable_tiling=false，不把未证实的改进设为默认。",
+      "measured_at": "2026-11-26T04:33:31Z"
+    },
+    {
+      "experiment": "E2_confidence",
+      "name": "置信度阈值校准",
+      "variable": "conf",
+      "evidence_level": "MEASURED",
+      "frozen_conditions": {
+        "weights": "experiments/runs/yolov8n-hardhat/weights/best.pt",
+        "n_images": 100,
+        "image_list_first5": [
+          "-104-_png_jpg.rf.cafd0e489c2526a33249f108d24b9039.jpg",
+          "-1052-_png_jpg.rf.faa916675308c044906ee1567d56e030.jpg",
+          "-108-_png_jpg.rf.af059e51d5e2d07f6d800c52df066542.jpg",
+          "-1081-_png_jpg.rf.5ac9302b3df0b340acc0e4af72e1017e.jpg",
+          "-1084-_png_jpg.rf.9e97c247272a8079f91d283f28710c69.jpg"
+        ],
+        "imgsz": 320,
+        "iou": 0.5,
+        "device": "cpu",
+        "seed": 20261126,
+        "matcher": "class-aware greedy IoU@0.5 (NOT COCO mAP)",
+        "tile": "320 / overlap 0.25"
+      },
+      "A": {
+        "arm": "A",
+        "options": {
+          "tiling": false,
+          "conf": 0.25,
+          "temporal": false,
+          "dedup": true
+        },
+        "n_images": 100,
+        "precision": 0.7683,
+        "recall": 0.8231,
+        "f1": 0.7947,
+        "tp": 242,
+        "fp": 73,
+        "fn": 52,
+        "detections_total": 315,
+        "violations_total": 9,
+        "alert_events": 2,
+        "mean_latency_ms": 30.09,
+        "p50_latency_ms": 29.9,
+        "p95_latency_ms": 33.21,
+        "fps_from_mean": 33.24
+      },
+      "B": {
+        "arm": "B",
+        "options": {
+          "tiling": false,
+          "conf": 0.5,
+          "temporal": false,
+          "dedup": true
+        },
+        "n_images": 100,
+        "precision": 0.912,
+        "recall": 0.6701,
+        "f1": 0.7725,
+        "tp": 197,
+        "fp": 19,
+        "fn": 97,
+        "detections_total": 216,
+        "violations_total": 2,
+        "alert_events": 1,
+        "mean_latency_ms": 30.35,
+        "p50_latency_ms": 29.91,
+        "p95_latency_ms": 34.24,
+        "fps_from_mean": 32.95
+      },
+      "delta": {
+        "precision": 0.1437,
+        "recall": -0.153,
+        "f1": -0.0222,
+        "mean_latency_ms": 0.26,
+        "fps_from_mean": -0.29,
+        "detections_total": -99,
+        "alert_events": -1
+      },
+      "conclusion_boundary": "阈值只改变判定门槛，不改模型权重；实测提高阈值后 Recall 下降、误报减少，是典型的 P/R 权衡，业务侧需按可接受误报率选择。",
+      "measured_at": "2026-11-26T04:33:38Z"
+    },
+    {
+      "experiment": "E3_temporal",
+      "name": "跨帧时序投票",
+      "variable": "enable_temporal",
+      "evidence_level": "MEASURED",
+      "frozen_conditions": {
+        "weights": "experiments/runs/yolov8n-hardhat/weights/best.pt",
+        "n_images": 100,
+        "image_list_first5": [
+          "-104-_png_jpg.rf.cafd0e489c2526a33249f108d24b9039.jpg",
+          "-1052-_png_jpg.rf.faa916675308c044906ee1567d56e030.jpg",
+          "-108-_png_jpg.rf.af059e51d5e2d07f6d800c52df066542.jpg",
+          "-1081-_png_jpg.rf.5ac9302b3df0b340acc0e4af72e1017e.jpg",
+          "-1084-_png_jpg.rf.9e97c247272a8079f91d283f28710c69.jpg"
+        ],
+        "imgsz": 320,
+        "iou": 0.5,
+        "device": "cpu",
+        "seed": 20261126,
+        "matcher": "class-aware greedy IoU@0.5 (NOT COCO mAP)",
+        "tile": "320 / overlap 0.25",
+        "temporal_probe": {
+          "frames_per_image": 5,
+          "injected_dropout": 0.3,
+          "dropout_seed": 20261126,
+          "baseline": "last single frame of the identical 5-frame clip"
+        }
+      },
+      "A": {
+        "arm": "A",
+        "options": {
+          "tiling": false,
+          "conf": 0.25,
+          "temporal": false,
+          "dedup": true
+        },
+        "n_images": 100,
+        "precision": 0.7812,
+        "recall": 0.5952,
+        "f1": 0.6757,
+        "tp": 175,
+        "fp": 49,
+        "fn": 119,
+        "detections_total": 224,
+        "violations_total": 8,
+        "alert_events": 1,
+        "mean_latency_ms": 30.18,
+        "p50_latency_ms": 29.96,
+        "p95_latency_ms": 32.17,
+        "fps_from_mean": 33.14,
+        "probe": {
+          "frames_per_image": 5,
+          "injected_dropout": 0.3,
+          "dropout_seed": 20261126,
+          "note": "Real YOLO boxes + seeded transient dropout; not synthetic detections."
+        }
+      },
+      "B": {
+        "arm": "B",
+        "options": {
+          "tiling": false,
+          "conf": 0.25,
+          "temporal": true,
+          "dedup": true
+        },
+        "n_images": 100,
+        "precision": 0.7609,
+        "recall": 0.7143,
+        "f1": 0.7368,
+        "tp": 210,
+        "fp": 66,
+        "fn": 84,
+        "detections_total": 276,
+        "violations_total": 9,
+        "alert_events": 2,
+        "mean_latency_ms": 30.15,
+        "p50_latency_ms": 29.99,
+        "p95_latency_ms": 32.45,
+        "fps_from_mean": 33.17,
+        "probe": {
+          "frames_per_image": 5,
+          "injected_dropout": 0.3,
+          "dropout_seed": 20261126,
+          "note": "Real YOLO boxes + seeded transient dropout; not synthetic detections."
+        }
+      },
+      "delta": {
+        "precision": -0.0203,
+        "recall": 0.1191,
+        "f1": 0.0611,
+        "mean_latency_ms": -0.03,
+        "fps_from_mean": 0.03,
+        "detections_total": 52,
+        "alert_events": 1
+      },
+      "conclusion_boundary": "受控扰动实验：每图构造 5 帧片段，对真实检出按固定 seed 注入 30% 瞬时漏检；两臂看到完全相同的帧序列，唯一差异是多数投票。收益=漏检恢复，代价=固定 3 帧确认延迟。两臂 wall-clock 时延差异处于测量噪声范围，不作为性能结论；片段由离散图片构造，不能外推真实连续视频流稳定性。",
+      "measured_at": "2026-11-26T04:33:44Z"
+    },
+    {
+      "experiment": "E4_dedup",
+      "name": "告警冷却去重",
+      "variable": "enable_alert_dedup",
+      "evidence_level": "MEASURED",
+      "frozen_conditions": {
+        "weights": "experiments/runs/yolov8n-hardhat/weights/best.pt",
+        "n_images": 100,
+        "image_list_first5": [
+          "-104-_png_jpg.rf.cafd0e489c2526a33249f108d24b9039.jpg",
+          "-1052-_png_jpg.rf.faa916675308c044906ee1567d56e030.jpg",
+          "-108-_png_jpg.rf.af059e51d5e2d07f6d800c52df066542.jpg",
+          "-1081-_png_jpg.rf.5ac9302b3df0b340acc0e4af72e1017e.jpg",
+          "-1084-_png_jpg.rf.9e97c247272a8079f91d283f28710c69.jpg"
+        ],
+        "imgsz": 320,
+        "iou": 0.5,
+        "device": "cpu",
+        "seed": 20261126,
+        "matcher": "class-aware greedy IoU@0.5 (NOT COCO mAP)",
+        "tile": "320 / overlap 0.25"
+      },
+      "A": {
+        "arm": "A",
+        "options": {
+          "tiling": false,
+          "conf": 0.25,
+          "temporal": false,
+          "dedup": false
+        },
+        "n_images": 100,
+        "precision": 0.7683,
+        "recall": 0.8231,
+        "f1": 0.7947,
+        "tp": 242,
+        "fp": 73,
+        "fn": 52,
+        "detections_total": 315,
+        "violations_total": 9,
+        "alert_events": 2,
+        "mean_latency_ms": 33.08,
+        "p50_latency_ms": 29.76,
+        "p95_latency_ms": 35.62,
+        "fps_from_mean": 30.23
+      },
+      "B": {
+        "arm": "B",
+        "options": {
+          "tiling": false,
+          "conf": 0.25,
+          "temporal": false,
+          "dedup": true
+        },
+        "n_images": 100,
+        "precision": 0.7683,
+        "recall": 0.8231,
+        "f1": 0.7947,
+        "tp": 242,
+        "fp": 73,
+        "fn": 52,
+        "detections_total": 315,
+        "violations_total": 9,
+        "alert_events": 2,
+        "mean_latency_ms": 30.23,
+        "p50_latency_ms": 30.01,
+        "p95_latency_ms": 32.5,
+        "fps_from_mean": 33.08
+      },
+      "delta": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "mean_latency_ms": -2.85,
+        "fps_from_mean": 2.85,
+        "detections_total": 0,
+        "alert_events": 0
+      },
+      "conclusion_boundary": "本批 100 张真实图片上告警本就稀疏，冷却去重未触发，两臂检测指标与事件数完全一致；这只说明该策略在此样本量下无效果，不代表现场更安全或事故率下降，需更长连续序列验证。",
+      "measured_at": "2026-11-26T04:33:51Z"
+    }
+  ]
+}

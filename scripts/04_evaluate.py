@@ -238,7 +238,7 @@ def run(argv: List[str] | None = None) -> int:
             d = ImageDraw.Draw(sheet)
             d.rectangle([0, 0, sheet.width, 58], fill=(245, 248, 246))
             d.text((16, 12), "真实测试集推理证据 · 绿框=人工标注 GT，红框=模型预测", font=_font(20, True), fill=INK)
-            d.text((16, 38), "Hard Hats Dataset (CC BY 4.0) · 未经挑选的合成图，全部来自 held-out test split",
+            d.text((16, 38), "Hard Hats Dataset (CC BY 4.0) · 未经挑选的真实图片，全部来自 held-out test split",
                    font=_font(12), fill=(107, 125, 118))
             for i, (name, im) in enumerate(cells):
                 x, y = (i % cols) * cw + 5, (i // cols) * ch + 64

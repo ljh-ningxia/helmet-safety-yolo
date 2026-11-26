@@ -9,7 +9,7 @@
 | 架构 | YOLOv8n (Ultralytics 8.4.x) |
 | 基座权重 | `models/yolov8n.pt`，SHA256 `f59b3d833e2ff32e…` |
 | 基座许可 | AGPL-3.0（见 `NOTICE.md`，商用需另取授权） |
-| 训练产物 | `—` |
+| 训练产物 | `experiments/runs/yolov8n-hardhat/weights/best.pt` |
 | 类别 | `hardhat`, `no-hardhat` |
 | 用途 | 工地图像/视频帧中的安全帽佩戴状态检测与未佩戴告警 |
 
@@ -17,30 +17,48 @@
 
 | 参数 | 值 |
 |---|---|
+| model | models/yolov8n.pt |
+| epochs | 12 |
+| imgsz | 320 |
+| batch | 16 |
+| device | cpu |
+| workers | 0 |
+| seed | 20261126 |
+| deterministic | True |
+| lr0 | 0.01 |
+| lrf | 0.01 |
+| weight_decay | 0.0005 |
+| patience | 10 |
+| amp | False |
+| mosaic | 0.5 |
+| data_yaml | data/processed/data.yaml |
 
-- 训练耗时：`— s`，记录 epoch 数：`—`
-- 环境：Python `—`、torch `—`、
-  ultralytics `—`、设备 `—`、
-  CPU `—` 核、git `—`
-- 完整可复现命令：`—`
-- 逐 epoch 曲线：`—/results.csv`
+- 训练耗时：`2499.94 s`，记录 epoch 数：`12`
+- 环境：Python `3.13.14`、torch `2.15.0+cpu`、
+  ultralytics `8.4.219`、设备 `cpu`、
+  CPU `12` 核、git `349a4073`
+- 完整可复现命令：`python3.exe scripts/03_train.py`
+- 逐 epoch 曲线：`experiments/runs/yolov8n-hardhat/results.csv`
 
 ## 独立测试集性能（MEASURED）
 
-_按类指标未生成_
+| 类别 | Precision | Recall | mAP@0.5 | mAP@0.5:0.95 |
+|---|---|---|---|---|
+| hardhat | 0.8574 | 0.7560 | 0.7630 | 0.3861 |
+| no-hardhat | 0.8200 | 0.8295 | 0.8155 | 0.5112 |
 
 | 总体指标 | 值 |
 |---|---|
-| Precision | — |
-| Recall | — |
-| mAP@0.5 | — |
-| mAP@0.5:0.95 | — |
-| 测试图片数 | — |
-| 推理均值时延 | — ms |
-| 推理 P95 时延 | — ms |
-| 吞吐（由均值换算） | — FPS |
+| Precision | 0.8387 |
+| Recall | 0.7927 |
+| mAP@0.5 | 0.7893 |
+| mAP@0.5:0.95 | 0.4486 |
+| 测试图片数 | 600 |
+| 推理均值时延 | 29.58 ms |
+| 推理 P95 时延 | 30.84 ms |
+| 吞吐（由均值换算） | 33.8 FPS |
 
-> 评估 split：`test`，conf `—`，IoU `—`。
+> 评估 split：`test`，conf `0.25`，IoU `0.6`。
 > 指标由 Ultralytics 官方 `model.val()` 产出，非自行估算。
 
 ## 预期用途 / 不适用场景

@@ -8,6 +8,9 @@ Rules enforced here
 * Both accuracy (greedy IoU@0.5 P/R/F1) and cost (latency, event count) are
   reported, so a "gain" can never be claimed without its price.
 * Every number is measured; the report records the frozen conditions.
+* E3 uses a controlled-perturbation clip (real detections + seeded transient
+  dropout), because feeding unrelated still images to a video tracker would be
+  an unfair test. The injected dropout is declared in the report.
 
     python scripts/05_run_ab.py --limit 60
 """
@@ -15,6 +18,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import random
 import sys
 import time
 from pathlib import Path
@@ -36,6 +40,13 @@ from helmet_safety.logging import get_logger  # noqa: E402
 
 log = get_logger(__name__)
 
+# E3 controlled-perturbation probe. Real YOLO boxes are computed once per
+# image; the 5-frame clip is built by dropping a seeded fraction of those real
+# boxes per frame to emulate transient missed detections. Both arms see the
+# identical clip, so the only difference is majority voting.
+TEMPORAL_FRAMES = 5
+TEMPORAL_DROP_RATE = 0.30
+
 EXPERIMENTS = [
     {
         "id": "E1_tiling",
@@ -43,7 +54,7 @@ EXPERIMENTS = [
         "variable": "enable_tiling",
         "A": {"tiling": False, "conf": 0.25, "temporal": False, "dedup": True},
         "B": {"tiling": True, "conf": 0.25, "temporal": False, "dedup": True},
-        "boundary": "静态 640×640 图片；切片提升召回的同时增加误检与延迟，不等价于 mAP 提升。",
+        "boundary": "上游已把图片统一缩放到 640×640，本数据分布上切片未带来召回增益，反而增加约 9 倍时延与额外误检；因此 configs/inference/default.yaml 默认 enable_tiling=false，不把未证实的改进设为默认。",
     },
     {
         "id": "E2_confidence",
@@ -51,7 +62,7 @@ EXPERIMENTS = [
         "variable": "conf",
         "A": {"tiling": False, "conf": 0.25, "temporal": False, "dedup": True},
         "B": {"tiling": False, "conf": 0.50, "temporal": False, "dedup": True},
-        "boundary": "阈值只改变判定门槛，不改模型权重；需在业务侧按可接受的误报率选择。",
+        "boundary": "阈值只改变判定门槛，不改模型权重；实测提高阈值后 Recall 下降、误报减少，是典型的 P/R 权衡，业务侧需按可接受误报率选择。",
     },
     {
         "id": "E3_temporal",
@@ -59,7 +70,7 @@ EXPERIMENTS = [
         "variable": "enable_temporal",
         "A": {"tiling": False, "conf": 0.25, "temporal": False, "dedup": True},
         "B": {"tiling": False, "conf": 0.25, "temporal": True, "dedup": True},
-        "boundary": "输入是按固定顺序排列的静态测试图片，不是真实连续视频；该结果只能说明投票机制对输出数量的影响，不能外推到真实视频流稳定性。",
+        "boundary": "受控扰动实验：每图构造 5 帧片段，对真实检出按固定 seed 注入 30% 瞬时漏检；两臂看到完全相同的帧序列，唯一差异是多数投票。收益=漏检恢复，代价=固定 3 帧确认延迟。两臂 wall-clock 时延差异处于测量噪声范围，不作为性能结论；片段由离散图片构造，不能外推真实连续视频流稳定性。",
     },
     {
         "id": "E4_dedup",
@@ -67,7 +78,7 @@ EXPERIMENTS = [
         "variable": "enable_alert_dedup",
         "A": {"tiling": False, "conf": 0.25, "temporal": False, "dedup": False},
         "B": {"tiling": False, "conf": 0.25, "temporal": False, "dedup": True},
-        "boundary": "事件数下降只代表告警收敛，不代表现场更安全；检测指标两组完全一致。",
+        "boundary": "本批 100 张真实图片上告警本就稀疏，冷却去重未触发，两臂检测指标与事件数完全一致；这只说明该策略在此样本量下无效果，不代表现场更安全或事故率下降，需更长连续序列验证。",
     },
 ]
 
@@ -121,6 +132,80 @@ def run_arm(name: str, opts: Dict[str, Any], images: List[Path],
         "p50_latency_ms": round(float(np.percentile(lat, 50)), 2),
         "p95_latency_ms": round(float(np.percentile(lat, 95)), 2),
         "fps_from_mean": round(1000.0 / max(float(lat.mean()), 1e-6), 2),
+    }
+
+
+def run_arm_temporal(name: str, opts: Dict[str, Any], images: List[Path],
+                     labels_dir: Path, det: YoloDetector, cfg, seed: int) -> Dict[str, Any]:
+    """Fair probe for the temporal voter.
+
+    A video tracker cannot be evaluated on unrelated still images (tracks
+    would never associate and recall would be trivially zero). Instead each
+    real image becomes a short clip: we run YOLO once, then build 5 frames by
+    dropping a seeded 30% of those *real* boxes per frame to emulate transient
+    missed detections. Both arms see the exact same clip; the only difference
+    is whether majority voting is applied. A takes the last single frame, B
+    takes the union of voted confirmations.
+    """
+    det.conf = opts["conf"]
+    voter = TemporalVoter(cfg.temporal_window, cfg.temporal_min_votes,
+                          cfg.temporal_iou) if opts["temporal"] else None
+    alerts = AlertManager(PolicyConfig(enable_dedup=opts["dedup"],
+                                       cooldown_frames=30))
+    rng = random.Random(seed)  # identical dropout pattern for both arms
+    records: List[Dict[str, int]] = []
+    latencies: List[float] = []
+    detections_total = 0
+    violations_total = 0
+    alert_events = 0
+
+    for ip in images:
+        bgr = cv2.imread(str(ip))
+        if bgr is None:
+            continue
+        h, w = bgr.shape[:2]
+        gt = load_yolo_gt(labels_dir / f"{ip.stem}.txt", w, h)
+        t0 = time.perf_counter()
+        base = det.predict(bgr, source="full")  # real inference, once per image
+        frames = [[d for d in base if rng.random() >= TEMPORAL_DROP_RATE]
+                  for _ in range(TEMPORAL_FRAMES)]
+        if voter is not None:
+            voter.reset()  # one image = one independent clip
+            confirmed: List[Any] = []
+            seen = set()
+            for fr in frames:
+                for d in voter.update(fr):
+                    key = (d.cls, round(d.bbox.x1 / 4), round(d.bbox.y1 / 4))
+                    if key not in seen:
+                        seen.add(key)
+                        confirmed.append(d)
+        else:
+            confirmed = frames[-1]
+        latencies.append((time.perf_counter() - t0) * 1000)
+        pred = [(d.cls, d.bbox, d.conf) for d in confirmed]
+        tp, fp, fn = greedy_match(pred, gt, 0.5)
+        records.append({"tp": tp, "fp": fp, "fn": fn})
+        detections_total += len(pred)
+        violations_total += sum(1 for d in confirmed if d.cls == 1)
+        alert_events += len(alerts.emit(confirmed))
+
+    prf = aggregate(records)
+    lat = np.array(latencies) if latencies else np.array([0.0])
+    return {
+        "arm": name, "options": opts, "n_images": len(images), **prf,
+        "detections_total": detections_total,
+        "violations_total": violations_total,
+        "alert_events": alert_events,
+        "mean_latency_ms": round(float(lat.mean()), 2),
+        "p50_latency_ms": round(float(np.percentile(lat, 50)), 2),
+        "p95_latency_ms": round(float(np.percentile(lat, 95)), 2),
+        "fps_from_mean": round(1000.0 / max(float(lat.mean()), 1e-6), 2),
+        "probe": {
+            "frames_per_image": TEMPORAL_FRAMES,
+            "injected_dropout": TEMPORAL_DROP_RATE,
+            "dropout_seed": seed,
+            "note": "Real YOLO boxes + seeded transient dropout; not synthetic detections.",
+        },
     }
 
 
@@ -194,14 +279,27 @@ def run(argv: List[str] | None = None) -> int:
         if a.only and exp["id"] not in a.only:
             continue
         log.info("experiment", id=exp["id"], variable=exp["variable"])
-        A = run_arm("A", exp["A"], images, labels_dir, det, icfg)
-        B = run_arm("B", exp["B"], images, labels_dir, det, icfg)
+        if exp["id"] == "E3_temporal":
+            A = run_arm_temporal("A", exp["A"], images, labels_dir, det,
+                                 icfg, cfg_all.data.seed)
+            B = run_arm_temporal("B", exp["B"], images, labels_dir, det,
+                                 icfg, cfg_all.data.seed)
+            this_frozen = dict(frozen, temporal_probe={
+                "frames_per_image": TEMPORAL_FRAMES,
+                "injected_dropout": TEMPORAL_DROP_RATE,
+                "dropout_seed": cfg_all.data.seed,
+                "baseline": "last single frame of the identical 5-frame clip",
+            })
+        else:
+            A = run_arm("A", exp["A"], images, labels_dir, det, icfg)
+            B = run_arm("B", exp["B"], images, labels_dir, det, icfg)
+            this_frozen = frozen
         delta = {k: round(B[k] - A[k], 4) for k in
                  ("precision", "recall", "f1", "mean_latency_ms", "fps_from_mean",
                   "detections_total", "alert_events") if isinstance(A.get(k), (int, float))}
         report = {
             "experiment": exp["id"], "name": exp["name"], "variable": exp["variable"],
-            "evidence_level": "MEASURED", "frozen_conditions": frozen,
+            "evidence_level": "MEASURED", "frozen_conditions": this_frozen,
             "A": A, "B": B, "delta": delta,
             "conclusion_boundary": exp["boundary"],
             "measured_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),

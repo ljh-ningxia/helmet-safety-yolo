@@ -3,7 +3,7 @@
   "run_type": "smoke_speed_probe",
   "command": "python3.exe scripts/03_train.py",
   "config": {
-    "model": "models\\yolov8n.pt",
+    "model": "models/yolov8n.pt",
     "epochs": 1,
     "imgsz": 320,
     "batch": 8,
@@ -17,7 +17,7 @@
     "patience": 10,
     "amp": false,
     "mosaic": 0.5,
-    "data_yaml": "C:/Users/Administrator/WorkBuddy/2026-11-26-08-25-19/helmet-safety-yolo/data/smoke/data.yaml"
+    "data_yaml": "data/smoke/data.yaml"
   },
   "environment": {
     "python": "3.13.14",
@@ -66,8 +66,8 @@
     "loss": 0.00011000001904903911,
     "postprocess": 8.680344999993395
   },
-  "run_dir": "C:/Users/Administrator/WorkBuddy/2026-11-26-08-25-19/helmet-safety-yolo/experiments/runs/smoke-1795663848",
-  "best_weights": "C:/Users/Administrator/WorkBuddy/2026-11-26-08-25-19/helmet-safety-yolo/experiments/runs/smoke-1795663848/weights/best.pt",
+  "run_dir": "experiments/runs/smoke-1795663848",
+  "best_weights": "experiments/runs/smoke-1795663848/weights/best.pt",
   "artifacts": [
     "args.yaml",
     "results.csv",

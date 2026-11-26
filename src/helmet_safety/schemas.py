@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Optional, Tuple
 class EvidenceLevel(str, Enum):
     """Provenance of a reported number. Never silently upgrade a level."""
     MEASURED = "MEASURED"        # produced by an actual run, with a log + config
-    SELFTEST_ONLY = "SELFTEST_ONLY"  # synthetic/demo backend, pipeline proof only
+    SELFTEST_ONLY = "SELFTEST_ONLY"  # v1 legacy marker; kept for reading old reports, never emitted by v2
     UNVERIFIED = "UNVERIFIED"    # quoted from a third party, not reproduced here
 
 
