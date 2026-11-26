@@ -1,0 +1,194 @@
+{
+  "experiment": "E1_tiling",
+  "title": "远景小目标：整图推理 vs 重叠切片推理",
+  "single_change": "仅把定位/检测环节从整图一次推理改为重叠切片 + 放大 + 跨切片 NMS",
+  "metric_layer": "检测层",
+  "timestamp": "2026-11-26 09:13:23",
+  "evidence_level": "SELFTEST_ONLY",
+  "warning": "SELFTEST_ONLY：demo 后端为 HSV 颜色演练器，以下数值仅证明链路可运行、A/B 框架可复核，禁止作为 YOLO 模型性能或项目成果对外引用。",
+  "frozen_conditions": {
+    "source": {
+      "kind": "synthetic",
+      "source": "synthetic",
+      "max_frames": 60,
+      "seed": 20261126,
+      "has_ground_truth": true
+    },
+    "detector": {
+      "backend": "demo",
+      "evidence_level": "SELFTEST_ONLY",
+      "min_area": 300,
+      "min_wh": 14,
+      "seed": 20261126,
+      "note": "HSV 颜色分割演练器，非 YOLO 模型；数值不可作为性能证据"
+    },
+    "base_config": {
+      "conf": 0.25,
+      "iou": 0.45,
+      "imgsz": 640,
+      "enable_tiling": false,
+      "enable_temporal": false,
+      "enable_alert_dedup": false,
+      "tile_size": 640,
+      "tile_overlap": 0.25,
+      "tile_scale": 2.0,
+      "hit_k": 3,
+      "miss_k": 3,
+      "cooldown_sec": 8.0,
+      "save_alerts": false,
+      "log_dir": "./experiments/results"
+    },
+    "environment": {
+      "python": "3.13.14",
+      "platform": "Windows-10-10.0.19045-SP0",
+      "processor": "AMD64 Family 23 Model 104 Stepping 1, AuthenticAMD",
+      "opencv": "5.1.0",
+      "numpy": "2.5.5",
+      "threads": 12,
+      "hash": "3df907918545365e"
+    },
+    "rule": "A/B 由同一配置派生，除 single_change 外无任何差异"
+  },
+  "A": {
+    "frames": 60,
+    "total_detections": 360,
+    "mean_detections_per_frame": 6.0,
+    "violation_detections": 120,
+    "mean_latency_ms": 32.27,
+    "fps": 30.99,
+    "failure_count": 0,
+    "failure_rate": 0.0,
+    "ground_truth": true,
+    "insufficient_ground_truth": false,
+    "per_class": {
+      "0": {
+        "tp": 120,
+        "fp": 120,
+        "fn": 180,
+        "precision": 0.5,
+        "recall": 0.4,
+        "f1": 0.4444,
+        "ap50": 0.4781
+      },
+      "1": {
+        "tp": 60,
+        "fp": 60,
+        "fn": 60,
+        "precision": 0.5,
+        "recall": 0.5,
+        "f1": 0.5,
+        "ap50": 0.8445
+      }
+    },
+    "precision": 0.5,
+    "recall": 0.45,
+    "map50": 0.6613,
+    "claim_limit": "指标仅在给定真值测试集与冻结条件下成立；跨数据集/跨硬件不可外推",
+    "confirmed_total": 120,
+    "alert_events": 120,
+    "alert_summary": {
+      "total_events": 120,
+      "by_level": {
+        "L1 提示": 30,
+        "L2 预警": 0,
+        "L3 严重": 90
+      },
+      "dedup_enabled": false,
+      "cooldown_sec": 8.0,
+      "log_path": "./experiments/results/alerts.jsonl"
+    }
+  },
+  "B": {
+    "frames": 60,
+    "total_detections": 708,
+    "mean_detections_per_frame": 11.8,
+    "violation_detections": 240,
+    "mean_latency_ms": 296.7,
+    "fps": 3.37,
+    "failure_count": 0,
+    "failure_rate": 0.0,
+    "ground_truth": true,
+    "insufficient_ground_truth": false,
+    "per_class": {
+      "0": {
+        "tp": 270,
+        "fp": 198,
+        "fn": 30,
+        "precision": 0.5769,
+        "recall": 0.9,
+        "f1": 0.7031,
+        "ap50": 0.6228
+      },
+      "1": {
+        "tp": 90,
+        "fp": 150,
+        "fn": 30,
+        "precision": 0.375,
+        "recall": 0.75,
+        "f1": 0.5,
+        "ap50": 0.5036
+      }
+    },
+    "precision": 0.4759,
+    "recall": 0.825,
+    "map50": 0.5632,
+    "claim_limit": "指标仅在给定真值测试集与冻结条件下成立；跨数据集/跨硬件不可外推",
+    "confirmed_total": 240,
+    "alert_events": 240,
+    "alert_summary": {
+      "total_events": 240,
+      "by_level": {
+        "L1 提示": 0,
+        "L2 预警": 0,
+        "L3 严重": 240
+      },
+      "dedup_enabled": false,
+      "cooldown_sec": 8.0,
+      "log_path": "./experiments/results/alerts.jsonl"
+    }
+  },
+  "delta": {
+    "total_detections": {
+      "A": 360,
+      "B": 708,
+      "delta": 348
+    },
+    "violation_detections": {
+      "A": 120,
+      "B": 240,
+      "delta": 120
+    },
+    "mean_latency_ms": {
+      "A": 32.27,
+      "B": 296.7,
+      "delta": 264.43
+    },
+    "fps": {
+      "A": 30.99,
+      "B": 3.37,
+      "delta": -27.62
+    },
+    "failure_rate": {
+      "A": 0.0,
+      "B": 0.0,
+      "delta": 0.0
+    },
+    "precision": {
+      "A": 0.5,
+      "B": 0.4759,
+      "delta": -0.0241
+    },
+    "recall": {
+      "A": 0.45,
+      "B": 0.825,
+      "delta": 0.375
+    },
+    "map50": {
+      "A": 0.6613,
+      "B": 0.5632,
+      "delta": -0.0981
+    },
+    "note": "检出框数量变化不等于准确率提升；只有 ground_truth=True 时 precision/recall/map50 可解释"
+  },
+  "conclusion_boundary": "切片会增加推理次数与显存/CPU 开销，必须同时报告 FPS 与时延；小目标召回改善需人工真值支持，不能仅凭检出框变多推断。"
+}

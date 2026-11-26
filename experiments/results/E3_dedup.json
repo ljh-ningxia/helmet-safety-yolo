@@ -1,0 +1,194 @@
+{
+  "experiment": "E3_dedup",
+  "title": "事件闭环：逐帧上报 vs 分级 + 冷却去重",
+  "single_change": "仅在业务动作环节加入分级、8 秒冷却去重与证据快照留存",
+  "metric_layer": "业务层",
+  "timestamp": "2026-11-26 09:13:23",
+  "evidence_level": "SELFTEST_ONLY",
+  "warning": "SELFTEST_ONLY：demo 后端为 HSV 颜色演练器，以下数值仅证明链路可运行、A/B 框架可复核，禁止作为 YOLO 模型性能或项目成果对外引用。",
+  "frozen_conditions": {
+    "source": {
+      "kind": "synthetic",
+      "source": "synthetic",
+      "max_frames": 60,
+      "seed": 20261126,
+      "has_ground_truth": true
+    },
+    "detector": {
+      "backend": "demo",
+      "evidence_level": "SELFTEST_ONLY",
+      "min_area": 300,
+      "min_wh": 14,
+      "seed": 20261126,
+      "note": "HSV 颜色分割演练器，非 YOLO 模型；数值不可作为性能证据"
+    },
+    "base_config": {
+      "conf": 0.25,
+      "iou": 0.45,
+      "imgsz": 640,
+      "enable_tiling": false,
+      "enable_temporal": false,
+      "enable_alert_dedup": false,
+      "tile_size": 640,
+      "tile_overlap": 0.25,
+      "tile_scale": 2.0,
+      "hit_k": 3,
+      "miss_k": 3,
+      "cooldown_sec": 8.0,
+      "save_alerts": false,
+      "log_dir": "./experiments/results"
+    },
+    "environment": {
+      "python": "3.13.14",
+      "platform": "Windows-10-10.0.19045-SP0",
+      "processor": "AMD64 Family 23 Model 104 Stepping 1, AuthenticAMD",
+      "opencv": "5.1.0",
+      "numpy": "2.5.5",
+      "threads": 12,
+      "hash": "3df907918545365e"
+    },
+    "rule": "A/B 由同一配置派生，除 single_change 外无任何差异"
+  },
+  "A": {
+    "frames": 60,
+    "total_detections": 360,
+    "mean_detections_per_frame": 6.0,
+    "violation_detections": 120,
+    "mean_latency_ms": 23.83,
+    "fps": 41.97,
+    "failure_count": 0,
+    "failure_rate": 0.0,
+    "ground_truth": true,
+    "insufficient_ground_truth": false,
+    "per_class": {
+      "0": {
+        "tp": 120,
+        "fp": 120,
+        "fn": 180,
+        "precision": 0.5,
+        "recall": 0.4,
+        "f1": 0.4444,
+        "ap50": 0.4781
+      },
+      "1": {
+        "tp": 60,
+        "fp": 60,
+        "fn": 60,
+        "precision": 0.5,
+        "recall": 0.5,
+        "f1": 0.5,
+        "ap50": 0.8445
+      }
+    },
+    "precision": 0.5,
+    "recall": 0.45,
+    "map50": 0.6613,
+    "claim_limit": "指标仅在给定真值测试集与冻结条件下成立；跨数据集/跨硬件不可外推",
+    "confirmed_total": 120,
+    "alert_events": 120,
+    "alert_summary": {
+      "total_events": 120,
+      "by_level": {
+        "L1 提示": 30,
+        "L2 预警": 0,
+        "L3 严重": 90
+      },
+      "dedup_enabled": false,
+      "cooldown_sec": 8.0,
+      "log_path": "./experiments/results/alerts.jsonl"
+    }
+  },
+  "B": {
+    "frames": 60,
+    "total_detections": 360,
+    "mean_detections_per_frame": 6.0,
+    "violation_detections": 120,
+    "mean_latency_ms": 19.66,
+    "fps": 50.86,
+    "failure_count": 0,
+    "failure_rate": 0.0,
+    "ground_truth": true,
+    "insufficient_ground_truth": false,
+    "per_class": {
+      "0": {
+        "tp": 120,
+        "fp": 120,
+        "fn": 180,
+        "precision": 0.5,
+        "recall": 0.4,
+        "f1": 0.4444,
+        "ap50": 0.4781
+      },
+      "1": {
+        "tp": 60,
+        "fp": 60,
+        "fn": 60,
+        "precision": 0.5,
+        "recall": 0.5,
+        "f1": 0.5,
+        "ap50": 0.8445
+      }
+    },
+    "precision": 0.5,
+    "recall": 0.45,
+    "map50": 0.6613,
+    "claim_limit": "指标仅在给定真值测试集与冻结条件下成立；跨数据集/跨硬件不可外推",
+    "confirmed_total": 120,
+    "alert_events": 1,
+    "alert_summary": {
+      "total_events": 1,
+      "by_level": {
+        "L1 提示": 0,
+        "L2 预警": 0,
+        "L3 严重": 1
+      },
+      "dedup_enabled": true,
+      "cooldown_sec": 8.0,
+      "log_path": "./experiments/results/alerts.jsonl"
+    }
+  },
+  "delta": {
+    "total_detections": {
+      "A": 360,
+      "B": 360,
+      "delta": 0
+    },
+    "violation_detections": {
+      "A": 120,
+      "B": 120,
+      "delta": 0
+    },
+    "mean_latency_ms": {
+      "A": 23.83,
+      "B": 19.66,
+      "delta": -4.17
+    },
+    "fps": {
+      "A": 41.97,
+      "B": 50.86,
+      "delta": 8.89
+    },
+    "failure_rate": {
+      "A": 0.0,
+      "B": 0.0,
+      "delta": 0.0
+    },
+    "precision": {
+      "A": 0.5,
+      "B": 0.5,
+      "delta": 0.0
+    },
+    "recall": {
+      "A": 0.45,
+      "B": 0.45,
+      "delta": 0.0
+    },
+    "map50": {
+      "A": 0.6613,
+      "B": 0.6613,
+      "delta": 0.0
+    },
+    "note": "检出框数量变化不等于准确率提升；只有 ground_truth=True 时 precision/recall/map50 可解释"
+  },
+  "conclusion_boundary": "去重会压低事件条数，不代表违规减少；冷却窗口内同一目标不再重复上报，需说明窗口设置依据。"
+}
