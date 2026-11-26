@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 520" width="1280" height="520">
+  <rect width="1280" height="520" fill="#ffffff"/>
+  <text x="40" y="48" font-family="Microsoft YaHei,PingFang SC,sans-serif" font-size="30" font-weight="700" fill="#1c2b26">公平 A/B 实验执行流程</text>
+  <rect x="40" y="66" width="1200" height="42" rx="8" fill="#e7f6ef"/>
+  <text x="58" y="93" font-family="Microsoft YaHei,sans-serif" font-size="17" fill="#087a54">页面唯一结论：公平对照使「改进有效」成为可检验的命题。</text>
+
+  <g font-family="Microsoft YaHei,sans-serif">
+    <!-- step 1 -->
+    <rect x="40" y="140" width="230" height="112" rx="10" fill="#f3fbf7" stroke="#bfe5d4" stroke-width="2"/>
+    <circle cx="66" cy="166" r="14" fill="#0f9b6c"/>
+    <text x="66" y="171" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff">1</text>
+    <text x="90" y="172" font-size="17" font-weight="700" fill="#1c2b26">冻结条件</text>
+    <text x="58" y="200" font-size="13" fill="#41564e">同一测试集 / 固定划分 / seed</text>
+    <text x="58" y="222" font-size="13" fill="#41564e">同一阈值、硬件、库版本</text>
+    <text x="58" y="240" font-size="12" fill="#0f9b6c">configs/ab_experiment.yaml</text>
+
+    <rect x="300" y="140" width="230" height="112" rx="10" fill="#f3fbf7" stroke="#bfe5d4" stroke-width="2"/>
+    <circle cx="326" cy="166" r="14" fill="#0f9b6c"/>
+    <text x="326" y="171" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff">2</text>
+    <text x="350" y="172" font-size="17" font-weight="700" fill="#1c2b26">派生 A / B</text>
+    <text x="318" y="200" font-size="13" fill="#41564e">同一 PipelineConfig</text>
+    <text x="318" y="222" font-size="13" fill="#41564e">只引入一项主要变动</text>
+    <text x="318" y="240" font-size="12" fill="#0f9b6c">PipelineConfig.variant()</text>
+
+    <rect x="560" y="140" width="230" height="112" rx="10" fill="#f3fbf7" stroke="#bfe5d4" stroke-width="2"/>
+    <circle cx="586" cy="166" r="14" fill="#0f9b6c"/>
+    <text x="586" y="171" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff">3</text>
+    <text x="610" y="172" font-size="17" font-weight="700" fill="#1c2b26">同一输入运行</text>
+    <text x="578" y="200" font-size="13" fill="#41564e">逐帧送入相同帧序列</text>
+    <text x="578" y="222" font-size="13" fill="#41564e">同一次运行内完成 A 与 B</text>
+    <text x="578" y="240" font-size="12" fill="#0f9b6c">experiments/run_ab.py</text>
+
+    <rect x="820" y="140" width="230" height="112" rx="10" fill="#f3fbf7" stroke="#bfe5d4" stroke-width="2"/>
+    <circle cx="846" cy="166" r="14" fill="#0f9b6c"/>
+    <text x="846" y="171" text-anchor="middle" font-size="14" font-weight="700" fill="#ffffff">4</text>
+    <text x="870" y="172" font-size="17" font-weight="700" fill="#1c2b26">同时测三类指标</text>
+    <text x="838" y="200" font-size="13" fill="#41564e">准确性（有真值时）</text>
+    <text x="838" y="222" font-size="13" fill="#41564e">时延 / FPS · 失败异常率</text>
+    <text x="838" y="240" font-size="12" fill="#0f9b6c">src/metrics.py</text>
+
+    <rect x="1080" y="140" width="160" height="112" rx="10" fill="#0f9b6c"/>
+    <text x="1160" y="182" text-anchor="middle" font-size="17" font-weight="700" fill="#ffffff">证据落盘</text>
+    <text x="1160" y="208" text-anchor="middle" font-size="13" fill="#d9f5e8">E*.json</text>
+    <text x="1160" y="230" text-anchor="middle" font-size="13" fill="#d9f5e8">+ 环境指纹</text>
+    <g fill="#0f9b6c" font-size="24" font-weight="700">
+      <text x="274" y="204">→</text><text x="534" y="204">→</text>
+      <text x="794" y="204">→</text><text x="1054" y="204">→</text>
+    </g>
+  </g>
+
+  <!-- three experiment strips -->
+  <g font-family="Microsoft YaHei,sans-serif">
+    <rect x="40" y="286" width="386" height="96" rx="8" fill="#ffffff" stroke="#dceae3" stroke-width="2"/>
+    <text x="58" y="314" font-size="16" font-weight="700" fill="#087a54">E1 检测层 · 切片推理</text>
+    <text x="58" y="340" font-size="13" fill="#41564e">Recall 0.450 → 0.825 ｜ FPS 30.99 → 3.37</text>
+    <text x="58" y="364" font-size="13" fill="#c0392b">Precision / mAP 下降 → 不可写成「准确率提升」</text>
+
+    <rect x="447" y="286" width="386" height="96" rx="8" fill="#ffffff" stroke="#dceae3" stroke-width="2"/>
+    <text x="465" y="314" font-size="16" font-weight="700" fill="#087a54">E2 判定层 · 时序投票</text>
+    <text x="465" y="340" font-size="13" fill="#41564e">事件 120 → 118 ｜ 检测层指标完全不变</text>
+    <text x="465" y="364" font-size="13" fill="#c0392b">稳定场景收益不显著，诚实标注「待测」</text>
+
+    <rect x="854" y="286" width="386" height="96" rx="8" fill="#ffffff" stroke="#dceae3" stroke-width="2"/>
+    <text x="872" y="314" font-size="16" font-weight="700" fill="#087a54">E3 业务层 · 冷却去重</text>
+    <text x="872" y="340" font-size="13" fill="#41564e">事件 120 → 1 ｜ 违规检出数不变</text>
+    <text x="872" y="364" font-size="13" fill="#c0392b">事件变少 ≠ 现场更安全</text>
+  </g>
+
+  <rect x="40" y="408" width="1200" height="86" rx="8" fill="#fff8e8" stroke="#e6cf9a" stroke-width="2"/>
+  <text x="58" y="436" font-family="Microsoft YaHei,sans-serif" font-size="16" font-weight="700" fill="#6b511c">以上数值来自 demo 演练后端（SELFTEST_ONLY），仅证明链路与实验框架可复核，禁止作为 YOLO 性能证据。</text>
+  <text x="58" y="462" font-family="Microsoft YaHei,sans-serif" font-size="14" fill="#8a6a28">换成自训权重 + 人工逐帧真值后重跑，实验卡由 run.py report 自动生成。</text>
+  <text x="58" y="484" font-family="Microsoft YaHei,sans-serif" font-size="13" fill="#8a6a28">表述顺序：结论 → 证据 → 边界；每页只回答一个核心问题，给出一条证据路径。</text>
+</svg>
