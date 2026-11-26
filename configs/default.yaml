@@ -1,0 +1,41 @@
+# 系统默认配置。A/B 实验中除「唯一主要变动」外，本文件所有值两边一致。
+model:
+  backend: demo            # demo（演练）| yolo（正式，需自训权重）
+  weights: runs/train/exp/weights/best.pt
+  conf: 0.25
+  iou: 0.45
+  imgsz: 640
+  classes: [helmet, no_helmet]
+
+baseline:
+  # 成像 → 预处理 → 定位/检测 → 判定 → 通讯/报表 → 业务动作
+  steps: [capture, preprocess, detection, decision, report, action]
+
+innovations:
+  tiling:                 # ① 定位/检测
+    enabled: false
+    size: 640
+    overlap: 0.25
+    scale: 2.0
+    nms_iou: 0.45
+  temporal:               # ② 判定
+    enabled: false
+    hit_k: 3
+    miss_k: 3
+    match_iou: 0.30
+  alert:                  # ③ 业务动作
+    enabled: false
+    cooldown_sec: 8.0
+    levels: {1: "L1 提示", 2: "L2 预警", 3: "L3 严重"}
+    webhook: ""           # 默认关闭；对外推送须本人确认后启用
+    save_snapshot: true
+
+source:
+  default: synthetic
+  frames: 60
+  seed: 20261126
+
+evidence:
+  demo_level: SELFTEST_ONLY
+  yolo_level: MEASURED
+  rule: "无人工真值时拒绝输出 Precision / Recall / mAP"

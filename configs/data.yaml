@@ -1,0 +1,14 @@
+# YOLO 数据集配置（供 scripts/train.py 转写为 ultralytics data.yaml）
+path: data/real
+train: images/train
+val: images/val
+test: images/test          # A/B 实验只用 test，且划分一旦固定不得改动
+
+names:
+  0: helmet               # 正确佩戴安全帽
+  1: no_helmet            # 未佩戴（预警对象）
+
+note: |
+  请自行准备可追溯来源的实拍数据并填写许可信息，见 docs/DATASET.md。
+  本仓库不分发任何第三方数据集，也不内置权重。
+  data/synthetic/ 仅为流程自检，不得用于性能报告。
