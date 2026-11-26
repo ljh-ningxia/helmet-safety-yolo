@@ -1,0 +1,90 @@
+{
+  "root": "C:/Users/Administrator/WorkBuddy/2026-11-26-08-25-19/helmet-safety-yolo/data/processed",
+  "classes": [
+    "hardhat",
+    "no-hardhat"
+  ],
+  "splits": {
+    "train": {
+      "images": 2000,
+      "boxes": 5617,
+      "empty_images": 32,
+      "boxes_per_image_mean": 2.808,
+      "boxes_per_image_p50": 2.0,
+      "boxes_per_image_p95": 9.0,
+      "boxes_per_image_max": 30,
+      "class_counts": {
+        "hardhat": 4257,
+        "no-hardhat": 1360
+      }
+    },
+    "valid": {
+      "images": 600,
+      "boxes": 1662,
+      "empty_images": 8,
+      "boxes_per_image_mean": 2.77,
+      "boxes_per_image_p50": 2.0,
+      "boxes_per_image_p95": 9.0,
+      "boxes_per_image_max": 22,
+      "class_counts": {
+        "hardhat": 1320,
+        "no-hardhat": 342
+      }
+    },
+    "test": {
+      "images": 600,
+      "boxes": 1649,
+      "empty_images": 8,
+      "boxes_per_image_mean": 2.748,
+      "boxes_per_image_p50": 2.0,
+      "boxes_per_image_p95": 8.05,
+      "boxes_per_image_max": 30,
+      "class_counts": {
+        "hardhat": 1336,
+        "no-hardhat": 313
+      }
+    }
+  },
+  "total_images": 3200,
+  "total_boxes": 8928,
+  "class_counts": {
+    "hardhat": 6913,
+    "no-hardhat": 2015
+  },
+  "class_ratio": {
+    "hardhat": 0.7743,
+    "no-hardhat": 0.2257
+  },
+  "imbalance_ratio": 3.43,
+  "scale_buckets_px": {
+    "medium": 5648,
+    "small": 1419,
+    "large": 1861
+  },
+  "bbox_area_px2": {
+    "p10": 756.3,
+    "p50": 3157.0,
+    "p90": 20269.9
+  },
+  "bbox_aspect_ratio": {
+    "p10": 0.484,
+    "p50": 0.696,
+    "p90": 1.348
+  },
+  "image_brightness_mean": {
+    "p10": 87.9,
+    "p50": 123.1,
+    "p90": 166.3,
+    "dark_lt_60": 86,
+    "bright_gt_180": 161
+  },
+  "exact_duplicate_groups": 0,
+  "exact_duplicate_examples": [],
+  "notes": [
+    "Upstream applied auto-orientation and a stretched resize to 640x640; aspect ratio is NOT preserved.",
+    "No augmentation was applied by the upstream exporter (declared in the dataset card).",
+    "Scale buckets use COCO thresholds on 640x640 pixel area.",
+    "Brightness is a crude luminance proxy, not a labelled day/night tag."
+  ],
+  "contact_sheet": "C:/Users/Administrator/WorkBuddy/2026-11-26-08-25-19/helmet-safety-yolo/experiments/results/dataset_samples.png"
+}

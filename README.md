@@ -1,149 +1,191 @@
-# 基于 YOLO 的工地现场安全帽识别与预警系统
+# 工地现场安全帽识别与预警系统
 
-> **一句话价值**：把「检测到了」变成「可判定、可预警、可追溯、可复核」的工地安全闭环。
-> **适用范围**：高位固定摄像头 / 施工现场出入口 / 塔吊俯拍画面的安全帽佩戴合规巡检。
-> **不适用范围**：夜间低照度、强逆光、遮挡严重、快速移动目标；跨场景泛化未经真实数据验证。
+> 基于 YOLOv8 的真实数据训练、独立测试集评估、单变量公平 A/B 与可复核证据链。
+> **v2 全部数字来自实际运行；项目里没有演示检测器，没有编造的精度。**
+
+[![CI](https://github.com/ljh-ningxia/helmet-safety-yolo/actions/workflows/ci.yml/badge.svg)](https://github.com/ljh-ningxia/helmet-safety-yolo/actions/workflows/ci.yml)
+![Python](https://img.shields.io/badge/python-3.11%2B-blue)
+![Dataset](https://img.shields.io/badge/dataset-CC%20BY%204.0-green)
+![Code](https://img.shields.io/badge/code-MIT-blue)
 
 ---
 
-## ⚠️ 证据等级声明（请先读这一段）
+## 一、解决什么问题
 
-| 后端 | 说明 | 证据等级 | 能否对外引用 |
-| --- | --- | --- | --- |
-| `yolo` | 加载**本人训练**的 `best.pt`，在带人工真值的实拍测试集上推理 | `MEASURED` | ✅ 可以 |
-| `demo` | HSV 颜色分割演练器，用于验证「链路能不能跑通、看板能不能用」 | `SELFTEST_ONLY` | ❌ **不可以** |
+工地安全帽依赖人工巡查，存在三个具体失效点：
 
-本仓库**不内置任何模型权重**，也不会替你编造 mAP / FPS。默认 `demo` 后端跑出来的所有数字（包括 `experiments/results/*.json`）只证明系统可运行、A/B 框架可复核，**不是 YOLO 模型性能，禁止写进简历、答辩结论或竞赛材料**。
+1. **漏检** —— 远景小目标在监控画面里只有十几个像素，人眼和整图推理都容易漏；
+2. **告警风暴** —— 单帧误检让告警忽明忽暗，现场人员很快对警报脱敏；
+3. **没有闭环** —— 常见做法止步于「画个框」，缺少分级、去重、留痕与可追溯证据。
 
-想拿到可引用的数据，只有一条路：准备带真值的实拍测试集 + 自己训练的权重，然后执行
+本项目交付的不只是一个 `detect()`，而是一条**从真实数据到可复核结论**的完整链路：
+
+```
+公开真实数据集 → 校验/分层/转换 → 真实训练 → 独立测试集评估
+      → 单变量 A/B（收益与代价同时测） → 推理服务 + 分级告警 → 自动生成的证据文档
+```
+
+<!-- AUTO:RESULTS START -->
+### 实测结果（自动生成，勿手改）
+
+| 指标 | 实测值 |
+|---|---|
+| 训练数据 | 3200 张真实图（train/valid/test 分层子集） |
+| 训练 epoch | — · CPU `— s` |
+| mAP@0.5 | **—** |
+| mAP@0.5:0.95 | **—** |
+| Precision / Recall | — / — |
+| 独立测试图片 | — |
+| CPU 推理 P95 | — ms |
+| CPU 吞吐 | — FPS |
+
+来源：`experiments/results/{train_run,evaluation,benchmark,dataset_audit}.json`。
+运行 `python scripts/07_generate_docs.py` 可重新生成。
+<!-- AUTO:RESULTS END -->
+
+---
+
+## 二、快速开始
 
 ```bash
-python run.py ab --backend yolo --weights runs/train/exp/weights/best.pt \
-                 --source data/real/images --labels-dir data/real/labels --frames 300
-python run.py report      # 由运行结果自动生成实验卡
+# 0. 环境
+python -m pip install -r requirements-dev.txt
+
+# 1. 取权重 + 真实数据集（约 1.1 GB，断点续传 + SHA256 校验）
+python scripts/00_fetch_weights.py
+python scripts/01_download_dataset.py
+
+# 2. 数据工程：COCO 校验 → 分层抽样 → YOLO 转换 → EDA 审计
+python scripts/02_prepare_dataset.py
+
+# 3. 真实训练（CPU 约 30–40 分钟；GPU 可把 subset 设为 null 跑全量）
+python scripts/03_train.py
+
+# 4. 独立测试集评估 + 延迟基准 + 场景切片 + 真实推理证据图
+python scripts/04_evaluate.py
+
+# 5. 单变量公平 A/B
+python scripts/05_run_ab.py --limit 60
+
+# 6. 由实测 JSON 重新生成 README / 数据卡 / 模型卡 / 评估报告
+python scripts/07_generate_docs.py
+
+# 7. 服务与看板
+python -m helmet_safety.cli serve --port 8000
 ```
 
----
-
-## 1. 项目简介 · 解决什么问题
-
-工地安全帽监管长期依赖人工巡查，高位摄像头下安全帽往往只有 20×20 像素，整图缩放推理后极易漏检；单帧误检又会造成告警风暴，现场人员迅速脱敏；更关键的是，多数检测项目止步于「画个框」，检测结果没有接到处置动作，事后无法追溯。
-
-本项目先画出完整系统基线，再**只改动三个环节**，并且每个改动各自做一次单变量 A/B 对照：
-
-| # | 真实痛点 | 改动环节 | 具体改动 | 代价 |
-| --- | --- | --- | --- | --- |
-| ① | 远景小目标被尺度压缩后漏检 | 定位 / 检测 | 整图一次推理 → 重叠切片 + 放大 + 跨切片 NMS | 推理次数增加，时延上升 |
-| ② | 单帧误检导致告警忽明忽暗 | 判定 | 单帧即报 → 连续 K 帧命中确认 | 引入 K-1 帧固有延迟 |
-| ③ | 检测完没有处置闭环、事件不可回溯 | 业务动作 | 分级预警 + 冷却去重 + 证据快照 + JSONL 台账 + 可选 Webhook | 磁盘 / 网络开销 |
-
-**强主张**：针对高位俯拍远景小目标漏检问题，在定位/检测模块把整图推理改为重叠切片推理，在同一 60 帧合成测试集、同一阈值、同一硬件下观察到 Recall 0.45 → 0.825，但 FPS 30.99 → 3.37、mAP@0.5 0.6613 → 0.5632；目前**缺少真实工地逐帧真值**，因此不声称准确率提升，也不声称实时性达标。
+打开 `http://127.0.0.1:8000` 看实时看板；`python -m helmet_safety.cli doctor` 可一键体检缺哪些产物。
 
 ---
 
-## 2. 快速开始 · 环境与运行
+## 三、真实数据，不是合成图
 
-**环境**：Python 3.10+（开发验证于 3.13.14 / Windows 10 / OpenCV 5.1.0），CPU 即可跑通演练链路；正式训练建议 NVIDIA GPU + CUDA。
+| 项 | 说明 |
+|---|---|
+| 数据集 | **Hard Hats Dataset**（Roboflow Universe, 2022），Hugging Face 镜像 `keremberke/hard-hat-detection` |
+| 规模 | 19,745 张真实工地图像：train 13,782 / valid 3,962 / test 2,001 |
+| 类别 | `hardhat`（已佩戴）/ `no-hardhat`（未佩戴，即告警对象） |
+| 标注 | COCO JSON，人工标注；本项目做 COCO→YOLO 转换 |
+| 许可 | **CC BY 4.0**，署名见 [`NOTICE.md`](NOTICE.md) 与 [`docs/DATASET.md`](docs/DATASET.md) |
+| 上游预处理 | EXIF 定向 + 拉伸到 640×640，未做增强（**已知域偏移，写在数据卡里**） |
+
+数据工程不是「解压即用」：
+
+- **校验**：重复 image/annotation id、孤儿标注、越界框、零面积框全部计数并写入报告；
+- **分层抽样**：按「框数分箱 × 是否含违规」分桶做最大余数法抽样，固定 seed，防止把稀有的 `no-hardhat` 抽没；
+- **EDA**：类别不平衡、COCO 尺度桶、框面积分位、亮度分位、MD5 完全重复图，全部从真实像素算出来；
+- **可复核**：每个压缩包有 SHA256，上游 revision 固定，统计落在 `experiments/results/dataset_audit.json`。
+
+![真实标注样本](experiments/results/dataset_samples.png)
+
+---
+
+## 四、系统设计与三项可独立开关的改进
+
+| 模块 | 解决什么 | 代价 | 如何验证 |
+|---|---|---|---|
+| **切片推理** `tiling.py` | 远景小目标被 640px 输入压缩 | 多次前向 → 延迟上升、重叠区误检 | E1：同一批真实图，只开 `enable_tiling` |
+| **时序投票** `temporal.py` | 单帧误检导致告警闪烁 | 引入 3–5 帧确认延迟 | E3：只开 `enable_temporal` |
+| **分级告警闭环** `alert/policy.py` | 只画框无业务动作 | 冷却期内可能压掉真实事件 | E4：只开 `enable_alert_dedup` |
+
+另有 `E2` 做置信度阈值校准。四组实验**每次只改一个变量**，A/B 共享同一权重、同一批图片、同一顺序与 seed，并**同时报告收益和代价**（召回、误检、延迟、事件数）。
+
+![真实推理证据](assets/real_inference.png)
+
+> 绿框 = 人工标注真值，红框 = 模型预测。全部来自独立 test split。
+
+---
+
+## 五、证据链
+
+任何一个数字都能顺着这条链查到原始日志：
+
+```
+configs/train/default.yaml
+        ↓  scripts/03_train.py
+experiments/runs/yolov8n-hardhat/results.csv   ← 逐 epoch 真实曲线
+        ↓  model.val(split="test")
+experiments/results/evaluation.json            ← 官方 P/R/mAP
+experiments/results/benchmark.json             ← 逐次推理的原始延迟样本
+experiments/results/ab_*.json                  ← 冻结条件 + A/B 原始计数
+        ↓  scripts/07_generate_docs.py
+README / docs/MODEL_CARD.md / docs/EVALUATION.md
+```
+
+`train_run.json` 里记录了完整命令、git commit、Python/torch/ultralytics 版本、CPU 核数与设备。文档里的数字由脚本从这些 JSON 渲染，**不手工誊写**，因此不会出现「PPT 和 JSON 对不上」。
+
+---
+
+## 六、工程规范
+
+- 配置集中、类型化、带校验（`configs/*/default.yaml` + env overlay）
+- 结构化日志：`HELMET_LOG_JSON=1` 输出可索引 JSON 行
+- 强类型 schema（`BBox` / `Detection` / `FrameResult` / `AlertEvent`）
+- FastAPI 服务 + Web 看板；**权重缺失时 `/detect` 明确返回 503，绝不用假结果兜底**
+- 30+ 单测（CI 不需要权重文件）、GitHub Actions、Dockerfile、Makefile、pyproject
+- ADR 记录关键取舍，模型卡 / 数据卡 / 复现指南齐备
 
 ```bash
-git clone https://github.com/ljh-ningxia/helmet-safety-yolo.git
-cd helmet-safety-yolo
-python -m pip install -r requirements.txt      # 核心依赖；YOLO 依赖见下
-python run.py selftest                        # ① 端到端链路自检
-python run.py ab                              # ② 三组公平 A/B 实验
-python run.py report                          # ③ 生成实验卡 docs/EXPERIMENT_CARD.md
-python run.py web                             # ④ 实时预警看板 http://127.0.0.1:5000
+pytest -v                       # 单元测试
+ruff check src scripts tests    # 静态检查
+python -m helmet_safety.cli doctor
 ```
-
-正式后端额外安装：`python -m pip install ultralytics`（会带入 PyTorch）。
-
-**输入 / 输出**
-
-| 入口 | 输入 | 输出 |
-| --- | --- | --- |
-| `run.py selftest` | 固定 seed 合成帧 | 控制台自检结论；不产生性能数据 |
-| `run.py ab` | 合成帧 / `data/real/images` + 标签 | `experiments/results/E*.json`、对比图、`summary.json` |
-| `run.py detect --source ...` | 图片 / 视频 / 摄像头 | 带框证据图 `experiments/results/evidence.jpg` |
-| `run.py web` | 合成流 / 摄像头 / RTSP | 浏览器实时画面、告警列表、指标卡、A/B 表 |
-| `run.py synthetic` | — | `data/synthetic/`（图片 + YOLO 标签 + manifest） |
-
-**看板演示**：页面三个开关分别对应三项改动，**一次只打开一个**就是在复现单变量 A/B；顶部常驻证据等级水印，避免演练截图被误当成实验结果。
 
 ---
 
-## 3. 结果与测试 · 真实结果与边界
+## 七、结论边界（请和结果一起读）
 
-### 3.1 公平 A/B 的冻结条件
+完整版见 [`docs/BOUNDARIES.md`](docs/BOUNDARIES.md)。最要紧的三条：
 
-| 设置项 | 冻结值 |
-| --- | --- |
-| 数据 | 同一帧序列（固定 seed 20261126），固定划分 |
-| 配置 | 同一置信度阈值 0.25、NMS IoU 0.45、同一代码基线 |
-| 设备 | 同一硬件、Python / OpenCV / NumPy 版本（环境指纹写入 JSON） |
-| 指标 | 有真值时 P/R/mAP@0.5；同时测 FPS、平均时延、失败/异常率、事件条数 |
-| 版本 | A、B 由同一个 `PipelineConfig` 派生，**仅引入一项主要改动** |
-
-### 3.2 本次运行结果（`demo` 后端 · `SELFTEST_ONLY` · 60 帧合成数据）
-
-| 实验 | A 基线 | B 改进 | 怎么读 |
-| --- | --- | --- | --- |
-| E1 切片推理 | 检出 360，Recall 0.450，FPS 30.99 | 检出 708，Recall 0.825，FPS 3.37 | 召回上来了，但**误检也上来了**（mAP 0.6613 → 0.5632），且慢了约 9 倍 |
-| E2 时序投票 | 事件 120 条 | 事件 118 条 | 稳定合成场景中收益**几乎为零**，只体现 2 帧确认延迟；真实误检分布下是否改善，待测 |
-| E3 冷却去重 | 事件 120 条 | 事件 1 条 | 去重压低的是**重复上报**，不是违规人数；这不等于现场更安全 |
-
-> 完整数据、环境指纹、逐类 TP/FP/FN 见 `experiments/results/E1_tiling.json` 等；实验卡由 `run.py report` 自动生成。
-> **准确性类指标**（P/R/mAP）由固定 seed 的合成数据决定，可复现；**FPS / 时延**受机器负载影响会有波动，引用时一律以当次 `E*.json` 为准，不要照抄文档里的旧值。
-
-### 3.3 失败案例与结论边界
-
-- **检出框变多 ≠ 准确率提升**：E1 中 B 的检出框从 360 涨到 708，Precision 却从 0.500 降到 0.476，mAP 也下降；只报「检测数量 +97%」是错误结论。
-- **无真值时系统拒绝输出 P/R/mAP**：`src/metrics.py` 在 `gts=None` 时把三项指标置为 `None` 并写入 `insufficient_ground_truth=True`。
-- **合成数据不是工地数据**：`data/synthetic/` 仅用于跑通流程，任何由此得出的精度都不可对外引用。
-- **未测项**：夜间 / 雨雾 / 遮挡、跨摄像头泛化、长视频稳定计数、端到端 P95 时延、真实事故率变化。逐条验证计划见 `docs/BOUNDARIES.md`。
-
-### 3.4 硬件条件
-
-本次演练：Windows 10 / AMD64 Family 23 Model 104 / 12 线程 CPU / 无 GPU / OpenCV 5.1.0 / NumPy 2.5.5。
-正式训练与推理的 GPU 型号、CUDA / cuDNN、TensorRT 是否开启，须由本人在实验卡中如实填写。
+1. 指标只在**这一个公开数据集**上测过，不代表客户自有摄像头的表现；上游做过拉伸缩放，存在域偏移。
+2. 数据集是**离散图片而非连续监控视频**，时序模块无法据此证明真实视频稳定性，A/B 报告里明确标注了这一点。
+3. 时延是 **CPU 单图同步推理**，没有 TensorRT / ONNX 优化，不能当边缘部署结论；类别不平衡使少数类召回天然偏低，上线前必须用现场数据重新校准阈值。
 
 ---
 
-## 4. 使用说明 / 维护
+## 八、文档索引
 
-```
-helmet-safety-yolo/
-├── run.py                 统一入口
-├── configs/               冻结配置（阈值、数据、A/B 条件）
-├── src/                   系统基线与三个改动模块
-│   ├── detector.py        YOLO / demo 双后端
-│   ├── tiling.py          ① 重叠切片推理
-│   ├── temporal.py        ② 跨帧时序投票
-│   ├── alert.py           ③ 分级预警与事件闭环
-│   ├── pipeline.py        成像→预处理→检测→判定→通讯/报表→业务动作
-│   ├── metrics.py         P/R/mAP/FPS + 无真值保护
-│   ├── synthetic.py       合成场景（SELFTEST_ONLY）
-│   └── webapp/            实时预警看板
-├── experiments/run_ab.py  公平 A/B 实验
-├── scripts/               训练、数据集校验、实验卡生成
-├── docs/                  架构、创新陈述、贡献、边界、证据索引
-└── tests/                 核心逻辑单测
-```
-
-- **许可证**：MIT，见 `LICENSE`。
-- **引用与数据集**：训练数据请使用可追溯来源并注明许可，见 `docs/DATASET.md`；本仓库不分发第三方数据集。
-- **版本**：v1.0.0（2026-11-26）。
-- **后续任务**：① 补真实逐帧真值并重跑 `MEASURED` 实验；② 用 TensorRT / 批处理把切片推理的 FPS 拉回可用区间；③ 引入 ByteTrack 替换简易 IoU 关联；④ 长视频稳定计数与 P95 时延报告；⑤ 现场联调日志。
+| 文档 | 内容 |
+|---|---|
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | 分层架构、数据契约、推理链路 |
+| [`docs/DATASET.md`](docs/DATASET.md) | 数据卡：来源、许可、实测画像、偏差 |
+| [`docs/MODEL_CARD.md`](docs/MODEL_CARD.md) | 模型卡：训练配置、实测指标、适用/不适用场景 |
+| [`docs/EVALUATION.md`](docs/EVALUATION.md) | 官方验证、延迟基准、场景切片、A/B、失败案例 |
+| [`docs/BOUNDARIES.md`](docs/BOUNDARIES.md) | 诚实的结论边界与未测项 |
+| [`docs/REPRODUCE.md`](docs/REPRODUCE.md) | 从零复现的逐步命令与预期产物 |
+| [`docs/ADR/`](docs/ADR/) | 架构决策记录 |
+| [`CHANGELOG.md`](CHANGELOG.md) | v1 → v2 变更 |
 
 ---
 
-## 5. 复现清单 · 课前诊断五问
+## 九、许可与合规
 
-| 五问 | 本仓库的回答位置 |
-| --- | --- |
-| 解决了什么真实问题？ | 本页 §1、`docs/INNOVATION.md` |
-| 相对基线改了什么？ | `docs/ARCHITECTURE.md`（先画基线再圈改变）、`docs/INNOVATION.md` |
-| 哪些实测数据支持？ | `experiments/results/*.json`、`docs/EXPERIMENT_CARD.md` |
-| 本人负责哪些工作？ | `docs/CONTRIBUTION.md` |
-| 陌生人怎样复现？ | 本页 §2、`requirements.txt`、`docs/EVIDENCE.md` |
+- 本仓库**原创代码** MIT，见 [`LICENSE`](LICENSE)。
+- **训练数据 CC BY 4.0**，需署名，见 [`NOTICE.md`](NOTICE.md)。
+- **YOLOv8n 基座权重 AGPL-3.0**；商用部署需评估 Ultralytics Enterprise 授权或更换骨干，见 `NOTICE.md`。
+- 原始图片、解压结果与权重**不进入 git**（`.gitignore`），仓库只保留下载脚本、校验和与统计。
+- 涉及人员影像，生产部署须遵守隐私与工作场所监控相关法规。
 
-> 课程要求：**能看、能跑、能对比、能复述**。本仓库四条都可在 5 分钟内验证。
+---
+
+<div align="center"><sub>让每一次改进，都留下可复核的证据。</sub></div>

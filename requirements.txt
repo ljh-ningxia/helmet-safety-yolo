@@ -1,13 +1,12 @@
-# 核心链路依赖（Python 3.10+）
-numpy>=1.24
-opencv-python-headless>=4.8
-Flask>=3.0
-PyYAML>=6.0
+# Runtime dependencies (loose lower bounds; see requirements-lock.txt for the
+# exact environment used to produce the reported measurements).
+numpy>=1.26
+opencv-python-headless>=4.9
 Pillow>=10.0
-
-# 可选：生成 A/B 对比图（缺失时自动降级为 OpenCV 绘图）
-matplotlib>=3.7 ; python_version < "3.14"
-
-# 正式 YOLO 后端（按需安装，会带入 PyTorch / CUDA）
-# ultralytics>=8.2
-# torch>=2.1
+PyYAML>=6.0
+ultralytics>=8.3
+torch>=2.2
+fastapi>=0.110
+uvicorn>=0.27
+python-multipart>=0.0.9
+matplotlib>=3.8

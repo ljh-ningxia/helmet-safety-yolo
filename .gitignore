@@ -1,33 +1,56 @@
-# 模型权重与训练产物（必须由本人训练，不入库）
+# ---- 原始数据与训练输入（约 2 GB，第三方 CC BY 4.0 数据，不分发） ----
+data/raw/*.zip
+data/raw/train/
+data/raw/valid/
+data/raw/valid-mini/
+data/raw/test/
+data/processed/
+data/interim/
+data/smoke/
+data/synthetic/
+
+# 保留下载元数据（SHA256 / revision / 许可）
+!data/raw/manifest.json
+
+# ---- 模型权重（AGPL-3.0 基座 + 自训权重，均不分发） ----
 *.pt
 *.pth
 *.onnx
 *.engine
+models/*.pt
+!models/weights_manifest.json
+
+# ---- 训练中间产物 ----
+experiments/runs/
 runs/
 weights/
-
-# 真实数据集（第三方许可与体积原因，不分发）
-data/real/
-data/synthetic/images/
-data/synthetic/labels/
-data/synthetic/manifest.json
-
-# 实验运行产物：保留目录，不保留过程文件
-experiments/results/*.jsonl
 experiments/results/snapshots/
+experiments/results/*.jsonl
 !experiments/results/.gitkeep
-configs/_generated_data.yaml
 
-# Python
+# 保留实测证据（JSON 报告、图表、真实推理图）
+!experiments/results/*.json
+!experiments/results/*.png
+!assets/*.png
+!assets/*.jpg
+
+# ---- Python / 工具 ----
 __pycache__/
 *.py[cod]
 .venv/
 venv/
 .pytest_cache/
+.ruff_cache/
+.mypy_cache/
 *.egg-info/
+build/
+dist/
+.coverage
+htmlcov/
 
-# 编辑器 / 系统
+# ---- 编辑器 / 系统 ----
 .vscode/
 .idea/
 Thumbs.db
 .DS_Store
+.env

@@ -1,0 +1,82 @@
+{
+  "evidence_level": "MEASURED",
+  "run_type": "smoke_speed_probe",
+  "command": "python3.exe scripts/03_train.py",
+  "config": {
+    "model": "models\\yolov8n.pt",
+    "epochs": 1,
+    "imgsz": 320,
+    "batch": 8,
+    "device": "cpu",
+    "workers": 0,
+    "seed": 20261126,
+    "deterministic": true,
+    "lr0": 0.01,
+    "lrf": 0.01,
+    "weight_decay": 0.0005,
+    "patience": 10,
+    "amp": false,
+    "mosaic": 0.5,
+    "data_yaml": "C:/Users/Administrator/WorkBuddy/2026-11-26-08-25-19/helmet-safety-yolo/data/smoke/data.yaml"
+  },
+  "environment": {
+    "python": "3.13.14",
+    "platform": "Windows-10-10.0.19045-SP0",
+    "processor": "AMD64 Family 23 Model 104 Stepping 1, AuthenticAMD",
+    "cpu_count": 12,
+    "torch": "2.15.0+cpu",
+    "cuda_available": false,
+    "device_used": "cpu",
+    "ultralytics": "8.4.219",
+    "opencv": "5.1.0",
+    "numpy": "2.5.5",
+    "pyyaml": "6.0.4",
+    "git_head": "349a40737843fca6b83a2c0b051fd8ea9a3763ee",
+    "timestamp_utc": "2026-11-26T03:30:56Z"
+  },
+  "elapsed_seconds": 26.63,
+  "epochs_logged": 1,
+  "final_epoch_row": {
+    "epoch": "1",
+    "time": "18.2888",
+    "train/box_loss": "2.42289",
+    "train/cls_loss": "6.70955",
+    "train/dfl_loss": "1.57478",
+    "metrics/precision(B)": "0.00068",
+    "metrics/recall(B)": "0.05263",
+    "metrics/mAP50(B)": "0.00027",
+    "metrics/mAP50-95(B)": "5e-05",
+    "val/box_loss": "3.28059",
+    "val/cls_loss": "202.868",
+    "val/dfl_loss": "2.80805",
+    "lr/pg0": "0.001667",
+    "lr/pg1": "0.001667",
+    "lr/pg2": "0.001667"
+  },
+  "metrics": {
+    "metrics/precision(B)": 0.0006790110578908435,
+    "metrics/recall(B)": 0.05263157894736842,
+    "metrics/mAP50(B)": 0.0002669222957313132,
+    "metrics/mAP50-95(B)": 5.440539144558721e-05,
+    "fitness": 5.440539144558721e-05
+  },
+  "ultralytics_speed": {
+    "preprocess": 0.7622250000167696,
+    "inference": 33.38383499999509,
+    "loss": 0.00011000001904903911,
+    "postprocess": 8.680344999993395
+  },
+  "run_dir": "C:/Users/Administrator/WorkBuddy/2026-11-26-08-25-19/helmet-safety-yolo/experiments/runs/smoke-1795663848",
+  "best_weights": "C:/Users/Administrator/WorkBuddy/2026-11-26-08-25-19/helmet-safety-yolo/experiments/runs/smoke-1795663848/weights/best.pt",
+  "artifacts": [
+    "args.yaml",
+    "results.csv",
+    "weights/best.pt",
+    "weights/last.pt"
+  ],
+  "notes": [
+    "Metrics come from the actual Ultralytics validation run on the prepared dataset.",
+    "CPU-only training; throughput is not comparable to a GPU baseline.",
+    "A smoke run is a throughput probe, NOT a reportable accuracy result."
+  ]
+}

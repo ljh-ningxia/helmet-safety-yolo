@@ -1,0 +1,15 @@
+# Dataset configuration. All paths are project-relative.
+raw_dir: data/raw
+processed_dir: data/processed
+dataset_yaml: configs/data/hardhat.yaml
+classes: [hardhat, no-hardhat]
+image_size: 640
+splits: [train, valid, test]
+seed: 20261126
+# CPU-only training budget, chosen from a measured speed probe
+# (1-epoch smoke: 1.25 it/s @ batch 8, imgsz 320, 12-core CPU).
+# Set to null to use the full 19,745-image corpus on a GPU.
+subset_train: 2000
+subset_valid: 600
+subset_test: 600
+val_fraction: 0.0

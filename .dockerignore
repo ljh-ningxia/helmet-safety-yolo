@@ -1,0 +1,12 @@
+.git
+.github
+data
+models
+experiments/runs
+**/__pycache__
+.pytest_cache
+.ruff_cache
+*.pyc
+.venv
+docs/ADR
+tests

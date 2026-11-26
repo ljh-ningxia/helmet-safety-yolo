@@ -1,0 +1,13 @@
+# Held-out evaluation.
+weights: experiments/runs/yolov8n-hardhat/weights/best.pt
+data: configs/data/hardhat.yaml
+split: test
+imgsz: 320
+conf: 0.25
+iou: 0.6
+device: cpu
+batch: 8
+benchmark_warmup: 3
+benchmark_repeats: 20
+seed: 20261126
+out_dir: experiments/results

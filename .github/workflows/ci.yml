@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+      - name: Lint
+        run: ruff check src scripts tests
+      - name: Unit + integration tests
+        run: pytest -v
+      - name: Validate configuration
+        run: PYTHONPATH=src python -m helmet_safety.cli info > /dev/null
+      - name: Verify all pipeline scripts compile
+        run: |
+          for f in scripts/*.py; do python -m py_compile "$f"; done
+
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check required documentation
+        run: |
+          for f in README.md NOTICE.md CHANGELOG.md docs/DATASET.md docs/MODEL_CARD.md \
+                   docs/EVALUATION.md docs/ARCHITECTURE.md docs/BOUNDARIES.md docs/REPRODUCE.md; do
+            test -s "$f" || { echo "missing: $f"; exit 1; }
+          done

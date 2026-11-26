@@ -1,0 +1,13 @@
+# Runtime inference switches. Exactly one may be flipped per A/B experiment.
+weights: experiments/runs/yolov8n-hardhat/weights/best.pt
+conf: 0.35
+iou: 0.5
+imgsz: 320
+device: cpu
+enable_tiling: false
+tile_size: 320
+tile_overlap: 0.25
+enable_temporal: true
+temporal_window: 5
+temporal_min_votes: 3
+temporal_iou: 0.45

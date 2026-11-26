@@ -1,0 +1,8 @@
+{
+  "file": "models/yolov8n.pt",
+  "size_bytes": 6549796,
+  "sha256": "f59b3d833e2ff32e194b5bb8e08d211dc7c5bdf144b90d2c8412c47ccfc83b36",
+  "source": "ultralytics/assets release v8.4.0",
+  "license": "AGPL-3.0 (Ultralytics pretrained weights) — see NOTICE.md",
+  "fetched_at": "2026-11-26T03:29:56Z"
+}

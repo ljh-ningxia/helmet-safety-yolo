@@ -1,0 +1,57 @@
+{
+  "dataset_id": "keremberke/hard-hat-detection",
+  "revision": "main",
+  "upstream_sha": "694c61350faf9a6622586d6cf50f45e1631862dc",
+  "license": "CC BY 4.0",
+  "source_url": "https://huggingface.co/datasets/keremberke/hard-hat-detection",
+  "citation": "Roboflow Universe Projects, Hard Hats Dataset, 2022, CC BY 4.0",
+  "expected_images": {
+    "train": 13782,
+    "valid": 3962,
+    "valid-mini": 3,
+    "test": 2001
+  },
+  "classes": {
+    "0": "hardhat",
+    "1": "no-hardhat"
+  },
+  "generated_at": "2026-11-26T03:35:56Z",
+  "files": [
+    {
+      "split": "test",
+      "remote_path": "data/test.zip",
+      "local_path": "data/raw/test.zip",
+      "size_bytes": 114425180,
+      "sha256": "e21ca22f4d69411af6e7c00b6d00ea30252867ac2d0f7cbef894b6ba9b9204c3",
+      "etag": "a7e0398b0e045b80a20dc63a414002bba3e5a8536d4fcc8d174538079666cd2c",
+      "downloaded_at": "2026-11-26T03:13:47Z"
+    },
+    {
+      "split": "valid-mini",
+      "remote_path": "data/valid-mini.zip",
+      "local_path": "data/raw/valid-mini.zip",
+      "size_bytes": 209798,
+      "sha256": "cc44c6d3c70c51cf594f4172a1e83e20aab12cab950104298e4b95a923e3551e",
+      "etag": "bfe01b211cdfc159aad5f1705bc3bb4ef63f3382b89513e35403a5b1633789ed",
+      "downloaded_at": "2026-11-26T03:13:55Z"
+    },
+    {
+      "split": "train",
+      "remote_path": "data/train.zip",
+      "local_path": "data/raw/train.zip",
+      "size_bytes": 778928861,
+      "sha256": "091b305ae044b652403ab809eae0c727551ae9bce66024f65a665cd1470126fd",
+      "etag": "725616075c671e9c84007b068d4adc9b1f5afd61e763ac1bf768a26e07b44b87",
+      "downloaded_at": "2026-11-26T03:30:46Z"
+    },
+    {
+      "split": "valid",
+      "remote_path": "data/valid.zip",
+      "local_path": "data/raw/valid.zip",
+      "size_bytes": 224860587,
+      "sha256": "3d39f51b1e9cd968b399d1506f014d551ff5cb572d27b076064bfb8458cb6833",
+      "etag": "707287e19d73a94b54b419b4255c49a26320dc3b19eee4a174346ade45b4e4c3",
+      "downloaded_at": "2026-11-26T03:35:56Z"
+    }
+  ]
+}
