@@ -37,6 +37,9 @@ jobs:
       - name: Check required documentation
         run: |
           for f in README.md NOTICE.md CHANGELOG.md docs/DATASET.md docs/MODEL_CARD.md \
-                   docs/EVALUATION.md docs/ARCHITECTURE.md docs/BOUNDARIES.md docs/REPRODUCE.md; do
+                   docs/EVALUATION.md docs/ARCHITECTURE.md docs/BOUNDARIES.md docs/REPRODUCE.md \
+                   docs/index.html docs/assets/dashboard_live.png docs/assets/real_inference.png; do
             test -s "$f" || { echo "missing: $f"; exit 1; }
           done
+      - name: Verify demo page rebuilds from measured JSON
+        run: python scripts/08_build_demo_page.py && test -s docs/index.html

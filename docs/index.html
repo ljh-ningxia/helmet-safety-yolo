@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>工地安全帽识别与预警系统 · 实测展示</title>
+<style>
+:root{--green:#0e8a5f;--green-d:#0a6b49;--ink:#1c2733;--muted:#5d6b78;--line:#dfe7e9;--bg:#f5f8f7;--card:#fff;--amber:#8a6a28;--amber-bg:#fff8e8}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei","PingFang SC",Arial,sans-serif;line-height:1.6}
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+header{background:#fff;border-top:4px solid var(--green);border-bottom:1px solid var(--line)}
+header .wrap{display:flex;align-items:center;justify-content:space-between;gap:24px;padding-top:22px;padding-bottom:22px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:14px}
+.logo{width:42px;height:42px;border-radius:10px;background:var(--green);color:#fff;font-weight:700;font-size:22px;display:flex;align-items:center;justify-content:center;flex:none}
+h1{font-size:21px;margin:0;letter-spacing:.2px}
+.brand p{margin:2px 0 0;color:var(--muted);font-size:13px}
+.badges{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.badge{background:#e6f5ee;color:var(--green-d);border:1px solid #bfe6d3;border-radius:999px;padding:5px 12px;font-size:12px;font-weight:700;letter-spacing:.4px}
+.btn{background:var(--green);color:#fff;text-decoration:none;border-radius:7px;padding:9px 15px;font-size:13px;font-weight:600}
+.btn:hover{background:var(--green-d)}
+main{padding:26px 0 10px}
+.notice{background:var(--amber-bg);border:1px solid #ecdcb0;color:#6f5620;border-radius:8px;padding:11px 15px;font-size:13px;margin-bottom:26px}
+code{background:#eef3f2;border-radius:4px;padding:1px 5px;font-size:12px;font-family:Consolas,Monaco,monospace}
+section{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:22px 24px;margin-bottom:20px}
+h2{font-size:17px;margin:0 0 4px;color:var(--green-d)}
+.sub{margin:0 0 18px;color:var(--muted);font-size:13px}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.kpi{border:1px solid var(--line);border-radius:8px;padding:14px 16px;background:#fbfdfc}
+.kpi-v{font-size:26px;font-weight:700;color:var(--green-d);letter-spacing:-.5px}
+.kpi-l{font-size:13px;font-weight:600;margin-top:2px}
+.kpi-n{font-size:11px;color:var(--muted);margin-top:2px}
+.hint{font-size:12px;color:var(--muted);margin:14px 0 0}
+img.evidence{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:8px;background:#fff}
+.cap{font-size:12px;color:var(--muted);margin:10px 0 0}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:#eaf4ef;color:var(--green-d);font-weight:700;font-size:12px}
+tr:last-child td{border-bottom:none}
+.dim{color:var(--muted);font-size:11px}
+ul{margin:10px 0 0;padding-left:20px;font-size:13px}
+li{margin-bottom:7px}
+pre{background:#14232c;color:#dcebe6;border-radius:8px;padding:15px 17px;overflow:auto;font-size:12.5px;line-height:1.7;margin:0 0 12px}
+footer{border-top:1px solid var(--line);color:var(--muted);font-size:12px;text-align:center;padding:20px 24px 30px}
+footer a{color:var(--green-d)}
+@media(max-width:760px){.kpis{grid-template-columns:repeat(2,1fr)}h1{font-size:18px}table{font-size:11.5px}}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <div class="brand"><div class="logo">H</div><div>
+    <h1>基于 YOLO 的工地现场安全帽识别与预警系统</h1>
+    <p>YOLOv8n · Hard Hats Dataset (CC BY 4.0) · 真实训练 / 独立测试 / 公平 A/B</p>
+  </div></div>
+  <div class="badges"><span class="badge">EVIDENCE: MEASURED</span>
+  <a class="btn" href="https://github.com/ljh-ningxia/helmet-safety-yolo">查看源码 →</a></div>
+</div></header>
+
+<main class="wrap">
+<div class="notice">这是<strong>静态展示页</strong>：所有数字均从仓库 <code>experiments/results/*.json</code> 读取，由 <code>scripts/08_build_demo_page.py</code> 自动生成；本页不调用后端，无需安装任何环境即可查看。</div>
+
+<section>
+  <h2>01 · 独立测试集实测</h2>
+  <p class="sub">600 张从未参与训练与选参的 held-out test 图片 · Ultralytics 官方 <code>model.val(split="test")</code></p>
+  <div class="kpis"><div class="kpi"><div class="kpi-v">0.7893</div><div class="kpi-l">mAP@0.5</div><div class="kpi-n">独立 test split</div></div><div class="kpi"><div class="kpi-v">0.4486</div><div class="kpi-l">mAP@0.5:0.95</div><div class="kpi-n">严格 IoU 区间</div></div><div class="kpi"><div class="kpi-v">0.8387</div><div class="kpi-l">Precision</div><div class="kpi-n">全类别</div></div><div class="kpi"><div class="kpi-v">0.7927</div><div class="kpi-l">Recall</div><div class="kpi-n">全类别</div></div><div class="kpi"><div class="kpi-v">33.8 FPS</div><div class="kpi-l">CPU 吞吐</div><div class="kpi-n">均值 29.58 ms</div></div><div class="kpi"><div class="kpi-v">30.84 ms</div><div class="kpi-l">P95 延迟</div><div class="kpi-n">20 次重复推理</div></div></div>
+  <p class="hint">告警类 <code>no-hardhat</code>：mAP@0.5 0.816，Recall 0.829。valid 选参集 mAP@0.5 0.8382 → test 0.7893，泛化落差 0.0489；对外只引用 test 数字。</p>
+</section>
+
+<section>
+  <h2>02 · 系统运行界面</h2>
+  <p class="sub">FastAPI + Web 看板，所有指标由实测 JSON 驱动；支持上传图片在线检测</p>
+  <img class="evidence" src="assets/dashboard_live.png" alt="系统 Web 看板真实运行界面">
+  <p class="cap">浏览器真实截图（服务运行时截取），非设计稿。在线检测需要本地启动服务；本页为静态展示。</p>
+</section>
+
+<section>
+  <h2>03 · 真实推理证据</h2>
+  <p class="sub">未经挑选的 6 张真实工地照片，全部来自 held-out test split</p>
+  <img class="evidence" src="assets/real_inference.png" alt="真实图片上的检测框：绿色为标注真值，红色为模型预测">
+  <p class="cap"><strong>绿框</strong> = 标注真值（GT），<strong>红框</strong> = 模型预测。数据集许可 CC BY 4.0，署名见 NOTICE.md。</p>
+</section>
+
+<section>
+  <h2>04 · 四组单变量 A/B</h2>
+  <p class="sub">同一权重、同一批 100 张真实图片、同一顺序与 seed；每次只改一个变量，同时报告收益与代价</p>
+  <table>
+    <thead><tr><th>实验</th><th>唯一变量</th><th>Recall A→B</th><th>Precision A→B</th><th>平均时延 A→B</th><th>告警事件 A→B</th></tr></thead>
+    <tbody><tr><td><b>E1_tiling</b><br><span class="dim">切片推理（小目标）</span></td><td><code>enable_tiling</code></td><td>0.8231 → <b>0.8027</b></td><td>0.7683 → <b>0.4111</b></td><td>32.12 → <b>291.31</b> ms</td><td>2 → <b>6</b></td></tr>
+<tr><td><b>E2_confidence</b><br><span class="dim">置信度阈值校准</span></td><td><code>conf</code></td><td>0.8231 → <b>0.6701</b></td><td>0.7683 → <b>0.9120</b></td><td>30.09 → <b>30.35</b> ms</td><td>2 → <b>1</b></td></tr>
+<tr><td><b>E3_temporal</b><br><span class="dim">跨帧时序投票</span></td><td><code>enable_temporal</code></td><td>0.5952 → <b>0.7143</b></td><td>0.7812 → <b>0.7609</b></td><td>30.18 → <b>30.15</b> ms</td><td>1 → <b>2</b></td></tr>
+<tr><td><b>E4_dedup</b><br><span class="dim">告警冷却去重</span></td><td><code>enable_alert_dedup</code></td><td>0.8231 → <b>0.8231</b></td><td>0.7683 → <b>0.7683</b></td><td>33.08 → <b>30.23</b> ms</td><td>2 → <b>2</b></td></tr></tbody>
+  </table>
+  <ul><li><b>E1_tiling</b>：上游已把图片统一缩放到 640×640，本数据分布上切片未带来召回增益，反而增加约 9 倍时延与额外误检；因此 configs/inference/default.yaml 默认 enable_tiling=false，不把未证实的改进设为默认。</li>
+<li><b>E2_confidence</b>：阈值只改变判定门槛，不改模型权重；实测提高阈值后 Recall 下降、误报减少，是典型的 P/R 权衡，业务侧需按可接受误报率选择。</li>
+<li><b>E3_temporal</b>：受控扰动实验：每图构造 5 帧片段，对真实检出按固定 seed 注入 30% 瞬时漏检；两臂看到完全相同的帧序列，唯一差异是多数投票。收益=漏检恢复，代价=固定 3 帧确认延迟。两臂 wall-clock 时延差异处于测量噪声范围，不作为性能结论；片段由离散图片构造，不能外推真实连续视频流稳定性。</li>
+<li><b>E4_dedup</b>：本批 100 张真实图片上告警本就稀疏，冷却去重未触发，两臂检测指标与事件数完全一致；这只说明该策略在此样本量下无效果，不代表现场更安全或事故率下降，需更长连续序列验证。</li></ul>
+  <p class="hint">A/B 使用 class-aware greedy IoU@0.5 匹配器，<strong>不是 COCO mAP</strong>；结论只能用于模块归因，不能替代独立测试集指标。</p>
+</section>
+
+<section>
+  <h2>05 · 结论边界</h2>
+  <ul><li>Metrics are measured on a single public dataset, not on the customer&#x27;s own camera distribution.</li><li>CPU latency is not an edge-deployment benchmark; no TensorRT/ONNX optimization applied yet.</li><li>Slice results use a simple greedy matcher and are diagnostic, not a replacement for official mAP.</li></ul>
+  <p class="hint">完整边界见仓库 <code>docs/BOUNDARIES.md</code>；数据集是离散图片而非连续监控视频，时序模块不能据此证明真实视频流稳定性。</p>
+</section>
+
+<section>
+  <h2>06 · 本地运行</h2>
+  <pre>git clone https://github.com/ljh-ningxia/helmet-safety-yolo.git
+cd helmet-safety-yolo
+pip install -r requirements.txt
+PYTHONPATH=src python -m helmet_safety.cli serve --port 8000
+# 浏览器打开 http://127.0.0.1:8000</pre>
+  <p class="hint">模型权重与原始数据<strong>不进入 Git</strong>（AGPL-3.0 权重 + CC BY 4.0 数据，且体积约 2 GB）。完整下载、训练、评估、复现流程见 <code>docs/REPRODUCE.md</code>；仅查看结果可直接打开本页。</p>
+</section>
+</main>
+
+<footer>Hard Hats Dataset (CC BY 4.0) · YOLOv8n 权重 AGPL-3.0 · 原创代码 MIT · 生成脚本 <code>scripts/08_build_demo_page.py</code> · <a href="https://github.com/ljh-ningxia/helmet-safety-yolo">https://github.com/ljh-ningxia/helmet-safety-yolo</a></footer>
+</body>
+</html>

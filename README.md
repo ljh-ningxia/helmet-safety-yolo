@@ -8,6 +8,12 @@
 ![Dataset](https://img.shields.io/badge/dataset-CC%20BY%204.0-green)
 ![Code](https://img.shields.io/badge/code-MIT-blue)
 
+> **在线看运行界面（不用装环境）**：仓库内置静态展示页 `docs/index.html`，实测指标、看板截图、
+> 真实推理证据与 A/B 表全部由 `experiments/results/*.json` 自动生成。
+> 在 **Settings → Pages** 选择 `main` + `/docs` 开启后，直接访问
+> <https://ljh-ningxia.github.io/helmet-safety-yolo/> 即可查看。
+> GitHub 本身只托管代码、不会在网页里运行 Python；要上传图片在线检测请按第六节在本地启动服务。
+
 ---
 
 ## 一、解决什么问题
